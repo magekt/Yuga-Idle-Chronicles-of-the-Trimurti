@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yuga Idle: Chronicles of the Trimurti</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Cinzel & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        cinzel: ['Cinzel', 'serif'],
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        gold: {
+                            300: '#fde047',
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                        },
+                        obsidian: {
+                            900: '#090d16',
+                            950: '#04060b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #090d16; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; border: 1px solid rgba(217, 119, 6, 0.2); }
+        ::-webkit-scrollbar-thumb:hover { background: #d97706; }
+        
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #fef3c7 0%, #f59e0b 50%, #d97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gold-border { border-color: rgba(217, 119, 6, 0.3); }
+        .gold-glow { box-shadow: 0 0 25px rgba(217, 119, 6, 0.15); }
+        .panel-bg { background: linear-gradient(145deg, #0f172a 0%, #090d16 100%); }
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .animate-pulse-slow { animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes float-up {
+            0% { transform: translateY(0px); opacity: 1; }
+            100% { transform: translateY(-35px); opacity: 0; }
+        }
+        .floating-toast { animation: float-up 1.8s ease-out forwards; }
+    </style>
+</head>
+<body class="h-full bg-obsidian-950 text-slate-100 font-inter select-none overflow-hidden flex flex-col">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-16 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-900 border-b gold-border px-3 py-2 flex flex-wrap items-center justify-between shadow-lg z-25 shrink-0">
+        <div class="flex items-center space-x-2.5">
+            <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center shadow-md gold-glow">
+                <span class="text-slate-950 text-lg font-bold">🔱</span>
+            </div>
+            <div>
+                <h1 class="font-cinzel font-bold text-xs sm:text-sm gold-gradient-text tracking-wide">Yuga Idle: Trimurti</h1>
+                <p class="text-[10px] text-amber-400/80 font-medium flex items-center space-x-1.5 flex-wrap">
+                    <span id="header-realm" class="bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-600/40 text-amber-300 font-bold">Mortal Body</span>
+                    <span>•</span>
+                    <span id="header-yuga" class="bg-slate-800 px-1.5 py-0.5 rounded text-amber-300 font-bold">Kali Yuga</span>
+                    <span>•</span>
+                    <span id="header-age">18y 0d</span>
+                    <span class="hidden md:inline">•</span>
+                    <span id="header-expectancy" class="hidden md:inline">Exp: 30y</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-1.5 mt-1.5 sm:mt-0">
+            <!-- Taels / Money -->
+            <div class="flex items-center space-x-1 bg-slate-950/80 px-2 py-1 rounded-lg border gold-border text-xs" title="Taels">
+                <i class="fa-solid fa-coins text-amber-400"></i>
+                <span id="header-taels" class="font-bold text-amber-300">300</span>
+            </div>
+            <!-- Spiritual Stones -->
+            <div class="flex items-center space-x-1 bg-slate-950/80 px-2 py-1 rounded-lg border gold-border text-xs" title="Spiritual Stones">
+                <i class="fa-solid fa-gem text-cyan-400"></i>
+                <span id="header-stones" class="font-bold text-cyan-300">5</span>
+            </div>
+            <!-- Reincarnations -->
+            <div class="flex items-center space-x-1 bg-slate-950/80 px-2 py-1 rounded-lg border gold-border text-xs" title="Reincarnations">
+                <i class="fa-solid fa-dharmachakra text-amber-500"></i>
+                <span id="header-reincarnations" class="font-bold text-amber-300">0</span>
+            </div>
+            <!-- Game Speed Controls -->
+            <div class="hidden sm:flex items-center space-x-0.5 bg-slate-950/80 p-0.5 rounded-lg border gold-border">
+                <button onclick="setGameSpeed(1)" id="speed-1" class="px-2 py-0.5 text-[10px] rounded bg-amber-600 text-slate-950 font-bold transition">1x</button>
+                <button onclick="setGameSpeed(2)" id="speed-2" class="px-2 py-0.5 text-[10px] rounded text-slate-300 hover:text-white transition">2x</button>
+                <button onclick="setGameSpeed(5)" id="speed-5" class="px-2 py-0.5 text-[10px] rounded text-slate-300 hover:text-white transition">5x</button>
+            </div>
+            <!-- Action Modal Buttons -->
+            <div class="flex items-center space-x-1">
+                <button onclick="openModal('breakthrough-modal')" class="px-2 py-1 bg-amber-700 hover:bg-amber-600 text-slate-950 font-bold rounded-lg text-xs transition shadow flex items-center space-x-1 animate-pulse" title="Realm Breakthrough">
+                    <i class="fa-solid fa-bolt-lightning"></i><span class="hidden xl:inline">Breakthrough</span>
+                </button>
+                <button onclick="openModal('store-modal')" class="px-2 py-1 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded-lg text-xs transition shadow" title="Pavilion">
+                    <i class="fa-solid fa-store"></i>
+                </button>
+                <button onclick="openModal('alchemy-modal')" class="px-2 py-1 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded-lg text-xs transition shadow" title="Alchemy">
+                    <i class="fa-solid fa-flask"></i>
+                </button>
+                <button onclick="openModal('sect-modal')" class="px-2 py-1 bg-cyan-700 hover:bg-cyan-600 text-white font-bold rounded-lg text-xs transition shadow" title="Sect">
+                    <i class="fa-solid fa-mountain-city"></i>
+                </button>
+                <button onclick="openModal('pets-modal')" class="px-2 py-1 bg-purple-700 hover:bg-purple-600 text-white font-bold rounded-lg text-xs transition shadow" title="Divine Pets & Mounts">
+                    <i class="fa-solid fa-paw"></i>
+                </button>
+                <button onclick="openModal('achievements-modal')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg text-xs transition border gold-border" title="Achievements">
+                    <i class="fa-solid fa-trophy"></i>
+                </button>
+                <button onclick="openModal('guide-modal')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg text-xs transition border gold-border" title="Guide">
+                    <i class="fa-solid fa-book-open"></i>
+                </button>
+                <button onclick="openModal('settings-modal')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg text-xs transition border gold-border" title="Settings">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile & Tablet Tab Bar -->
+    <nav class="flex lg:hidden bg-slate-900 border-b gold-border justify-around p-1.5 z-20 text-xs shrink-0">
+        <button onclick="switchMobileTab('dashboard')" id="tab-btn-dashboard" class="flex-1 py-1 px-2 rounded text-center font-bold text-amber-400 bg-amber-950/40 border border-amber-600/40 flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-house-chimney"></i><span>Home</span>
+        </button>
+        <button onclick="switchMobileTab('activities')" id="tab-btn-activities" class="flex-1 py-1 px-2 rounded text-center font-medium text-slate-400 hover:text-white flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-list-check"></i><span>Sadhana</span>
+        </button>
+        <button onclick="switchMobileTab('combat')" id="tab-btn-combat" class="flex-1 py-1 px-2 rounded text-center font-medium text-slate-400 hover:text-white flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-skull"></i><span>Combat</span>
+        </button>
+        <button onclick="switchMobileTab('inventory')" id="tab-btn-inventory" class="flex-1 py-1 px-2 rounded text-center font-medium text-slate-400 hover:text-white flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-bag-shopping"></i><span>Items</span>
+        </button>
+        <button onclick="switchMobileTab('log')" id="tab-btn-log" class="flex-1 py-1 px-2 rounded text-center font-medium text-slate-400 hover:text-white flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-scroll"></i><span>Log</span>
+        </button>
+    </nav>
+
+    <!-- Main Game Dashboard -->
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 p-3 overflow-hidden">
+        
+        <!-- LEFT COLUMN: Vitals & Cultivation Attributes (4 Cols) -->
+        <section id="pane-dashboard" class="col-span-1 lg:col-span-4 flex flex-col space-y-3 overflow-y-auto pr-1">
+            
+            <!-- Vitals Card -->
+            <div class="panel-bg border gold-border rounded-xl p-3 shadow-lg gold-glow">
+                <h2 class="font-cinzel font-bold text-amber-400 text-xs sm:text-sm mb-2 flex items-center space-x-2">
+                    <i class="fa-solid fa-heart-pulse text-red-500"></i>
+                    <span>Vital Energies & Sustenance</span>
+                </h2>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-1 gap-2">
+                    <!-- Health -->
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-0.5">
+                            <span class="text-slate-300 font-medium flex items-center space-x-1"><i class="fa-solid fa-heart text-red-400 w-3"></i><span>Health</span></span>
+                            <span id="stat-health-val" class="font-bold text-red-300">100 / 100</span>
+                        </div>
+                        <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-red-900/40">
+                            <div id="bar-health" class="bg-gradient-to-r from-red-600 to-red-400 h-full transition-all duration-300" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <!-- Stamina -->
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-0.5">
+                            <span class="text-slate-300 font-medium flex items-center space-x-1"><i class="fa-solid fa-bolt text-amber-400 w-3"></i><span>Stamina</span></span>
+                            <span id="stat-stamina-val" class="font-bold text-amber-300">100 / 100</span>
+                        </div>
+                        <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-amber-900/40">
+                            <div id="bar-stamina" class="bg-gradient-to-r from-amber-600 to-amber-400 h-full transition-all duration-300" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <!-- Mana -->
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-0.5">
+                            <span class="text-slate-300 font-medium flex items-center space-x-1"><i class="fa-solid fa-wand-magic-sparkles text-cyan-400 w-3"></i><span>Mana / Qi</span></span>
+                            <span id="stat-mana-val" class="font-bold text-cyan-300">100 / 100</span>
+                        </div>
+                        <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-cyan-900/40">
+                            <div id="bar-mana" class="bg-gradient-to-r from-cyan-600 to-cyan-400 h-full transition-all duration-300" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <!-- Nutrition -->
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-0.5">
+                            <span class="text-slate-300 font-medium flex items-center space-x-1"><i class="fa-solid fa-bowl-rice text-emerald-400 w-3"></i><span>Nutrition</span></span>
+                            <span id="stat-nutrition-val" class="font-bold text-emerald-300">100 / 100</span>
+                        </div>
+                        <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-emerald-900/40">
+                            <div id="bar-nutrition" class="bg-gradient-to-r from-emerald-600 to-emerald-400 h-full transition-all duration-300" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attributes Card -->
+            <div class="panel-bg border gold-border rounded-xl p-3 shadow-lg flex-1">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="font-cinzel font-bold text-amber-400 text-xs sm:text-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-chart-bar text-amber-500"></i>
+                        <span>Cultivation Attributes</span>
+                    </h2>
+                    <span class="text-[10px] text-slate-400">Aptitudes multiply gains</span>
+                </div>
+                
+                <div class="space-y-2" id="attributes-container">
+                    <!-- Dynamic Attribute Rows -->
+                </div>
+            </div>
+
+        </section>
+
+        <!-- MIDDLE COLUMN: Activities, Sadhana Schedule & Combat (5 Cols) -->
+        <section id="pane-activities" class="col-span-1 lg:col-span-5 flex-col space-y-3 overflow-y-auto pr-1 hidden lg:flex">
+            
+            <!-- Activities / Sadhana Card with Evolution -->
+            <div class="panel-bg border gold-border rounded-xl p-3 shadow-lg">
+                <div class="flex justify-between items-center mb-2">
+                    <div>
+                        <h2 class="font-cinzel font-bold text-amber-400 text-xs sm:text-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-list-check text-amber-500"></i>
+                            <span>Sadhana Schedule & Evolution</span>
+                        </h2>
+                        <p class="text-[10px] text-slate-400">Unlock advanced practices as attributes & realms grow</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[320px] overflow-y-auto pr-1" id="activities-container">
+                    <!-- Activity Buttons injected via JS -->
+                </div>
+            </div>
+
+            <!-- Combat Card -->
+            <div id="pane-combat" class="panel-bg border gold-border rounded-xl p-3 shadow-lg flex-1 flex flex-col hidden lg:flex">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="font-cinzel font-bold text-amber-400 text-xs sm:text-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-skull text-red-500"></i>
+                        <span>Asura & Monster Battles</span>
+                    </h2>
+                    <div class="flex space-x-1.5">
+                        <button onclick="triggerBossRaid()" class="px-2.5 py-1 bg-amber-700 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded transition shadow">
+                            Boss Raid
+                        </button>
+                        <button onclick="toggleCombat()" id="combat-toggle-btn" class="px-2.5 py-1 bg-red-700 hover:bg-red-600 text-white font-bold text-xs rounded transition shadow">
+                            Look for Trouble
+                        </button>
+                    </div>
+                </div>
+
+                <div id="combat-panel" class="flex-1 bg-slate-900/80 rounded-lg p-3 border border-slate-800 flex flex-col justify-between hidden">
+                    <div class="flex justify-between items-center mb-2">
+                        <div>
+                            <span id="monster-tier-badge" class="text-[9px] px-1.5 py-0.5 rounded bg-red-950 text-red-300 border border-red-800 font-bold">Standard Encounter</span>
+                            <h3 id="monster-name" class="font-cinzel font-bold text-red-400 text-xs sm:text-sm mt-0.5">Vicious Yaksha</h3>
+                        </div>
+                        <div class="text-right">
+                            <span id="combat-status" class="text-[10px] px-2 py-0.5 rounded bg-red-950 text-red-300 border border-red-800">Combat Active</span>
+                        </div>
+                    </div>
+
+                    <!-- Monster HP -->
+                    <div class="mb-2">
+                        <div class="flex justify-between text-[11px] mb-0.5">
+                            <span class="text-slate-300">Monster HP</span>
+                            <span id="monster-hp-val" class="font-bold text-red-300">50 / 50</span>
+                        </div>
+                        <div class="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-red-900/40">
+                            <div id="monster-bar-hp" class="bg-gradient-to-r from-red-600 to-amber-600 h-full transition-all duration-200" style="width: 100%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Combat Log Preview -->
+                    <div id="combat-sublog" class="bg-slate-950 rounded p-2 text-[11px] text-slate-300 h-16 overflow-y-auto font-mono mb-2 border border-slate-800 space-y-1">
+                        <div>Engaging in battle...</div>
+                    </div>
+
+                    <div class="flex space-x-2">
+                        <button onclick="triggerSpecialAttack()" class="flex-1 py-1.5 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold text-xs rounded transition shadow">
+                            Spiritual Strike (Mana)
+                        </button>
+                        <button onclick="fleeCombat()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded transition">
+                            Flee
+                        </button>
+                    </div>
+                </div>
+
+                <div id="combat-idle-msg" class="flex-1 flex flex-col items-center justify-center text-center p-4 bg-slate-900/40 rounded-lg border border-slate-800/60">
+                    <i class="fa-solid fa-shield-halved text-slate-600 text-2xl mb-1"></i>
+                    <p class="text-[11px] text-slate-400">You are currently at peace. Click "Look for Trouble" or challenge a Boss Raid for divine artifacts and spiritual stones.</p>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- RIGHT COLUMN: Inventory, Equipment & Chronicle Log (3 Cols) -->
+        <section id="pane-inventory" class="col-span-1 lg:col-span-3 flex-col space-y-3 overflow-y-auto hidden lg:flex">
+            
+            <!-- Equipment & Inventory Card -->
+            <div class="panel-bg border gold-border rounded-xl p-3 shadow-lg">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="font-cinzel font-bold text-amber-400 text-xs sm:text-sm flex items-center space-x-1.5">
+                        <i class="fa-solid fa-shield-cat text-amber-500"></i>
+                        <span>Equipped Artifacts</span>
+                    </h2>
+                    <span class="text-[10px] text-slate-400">Gear bonuses active</span>
+                </div>
+
+                <div class="grid grid-cols-4 gap-1.5 mb-2.5" id="equipment-slots">
+                    <!-- Equipment slots injected via JS -->
+                </div>
+
+                <div class="flex justify-between items-center mb-1.5">
+                    <h3 class="font-cinzel font-bold text-amber-300 text-xs flex items-center space-x-1">
+                        <i class="fa-solid fa-bag-shopping text-amber-500"></i>
+                        <span>Inventory (<span id="inv-count">0</span>/20)</span>
+                    </h3>
+                    <button onclick="sortInventory()" class="p-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded text-xs border gold-border" title="Sort Inventory">
+                        <i class="fa-solid fa-arrow-down-wide-short"></i>
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-5 gap-1.5 bg-slate-900/80 p-2 rounded-lg border border-slate-800 min-h-[100px]" id="inventory-grid">
+                    <!-- Inventory Slots -->
+                </div>
+                <div id="item-tooltip" class="mt-2 p-2 bg-slate-900 rounded border border-slate-800 text-[11px] text-slate-300 min-h-[35px]">
+                    <span class="text-slate-500 italic">Hover or click an item to inspect or equip.</span>
+                </div>
+            </div>
+
+            <!-- Chronicle Event Log Card -->
+            <div id="pane-log" class="panel-bg border gold-border rounded-xl p-3 shadow-lg flex-1 flex flex-col">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="font-cinzel font-bold text-amber-400 text-xs sm:text-sm flex items-center space-x-1.5">
+                        <i class="fa-solid fa-scroll text-amber-500"></i>
+                        <span>Chronicle Log</span>
+                    </h2>
+                    <div class="flex space-x-1 text-[10px]">
+                        <button onclick="setLogFilter('all')" id="filter-all" class="px-2 py-0.5 rounded bg-amber-600 text-slate-950 font-bold">All</button>
+                        <button onclick="setLogFilter('combat')" id="filter-combat" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300">Combat</button>
+                        <button onclick="setLogFilter('cultivation')" id="filter-cultivation" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300">Cultivation</button>
+                    </div>
+                </div>
+
+                <div id="event-log" class="flex-1 bg-slate-950 rounded-lg p-2.5 font-mono text-[11px] text-slate-300 overflow-y-auto space-y-1.5 border border-slate-900 max-h-[180px] lg:max-h-none">
+                    <!-- Log entries -->
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- MODALS -->
+
+    <!-- Breakthrough Modal -->
+    <div id="breakthrough-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="panel-bg border gold-border rounded-xl p-6 w-full max-w-md shadow-2xl relative text-center">
+            <button onclick="closeModal('breakthrough-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <div class="w-14 h-14 rounded-full bg-amber-600/20 border border-amber-500/50 flex items-center justify-center mx-auto mb-3 gold-glow">
+                <i class="fa-solid fa-bolt-lightning text-2xl text-amber-400"></i>
+            </div>
+            <h2 class="font-cinzel font-bold text-base text-amber-400 mb-1">Realm Breakthrough</h2>
+            <p id="breakthrough-desc" class="text-xs text-slate-300 mb-4">Ascend to the next stage of divine cultivation to unlock superior attributes and lifespan.</p>
+            <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 text-xs text-slate-300 mb-4 space-y-1.5 text-left">
+                <div class="flex justify-between"><span>Current Realm:</span> <span id="bt-current" class="font-bold text-amber-400">Mortal Body</span></div>
+                <div class="flex justify-between"><span>Next Realm:</span> <span id="bt-next" class="font-bold text-cyan-300">Qi Condensation</span></div>
+                <div class="flex justify-between"><span>Success Probability:</span> <span id="bt-chance" class="font-bold text-emerald-400">85%</span></div>
+                <div class="flex justify-between"><span>Required St. Stones:</span> <span class="font-bold text-amber-300">10</span></div>
+            </div>
+            <button onclick="attemptBreakthrough()" class="w-full py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-bold rounded-lg shadow-lg transition text-xs">
+                Attempt Breakthrough
+            </button>
+        </div>
+    </div>
+
+    <!-- Store Modal -->
+    <div id="store-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="panel-bg border gold-border rounded-xl p-6 w-full max-w-lg shadow-2xl relative">
+            <button onclick="closeModal('store-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h2 class="font-cinzel font-bold text-base text-amber-400 mb-1 flex items-center space-x-2">
+                <i class="fa-solid fa-store text-amber-500"></i><span>Spiritual Pavilion & Store</span>
+            </h2>
+            <p class="text-xs text-slate-400 mb-4">Acquire ancient manuals, spiritual herbs, and divine artifacts.</p>
+            <div class="space-y-3 max-h-[60vh] overflow-y-auto pr-1" id="store-items-list">
+                <!-- Store items -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Alchemy Modal -->
+    <div id="alchemy-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="panel-bg border gold-border rounded-xl p-6 w-full max-w-lg shadow-2xl relative">
+            <button onclick="closeModal('alchemy-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h2 class="font-cinzel font-bold text-base text-emerald-400 mb-1 flex items-center space-x-2">
+                <i class="fa-solid fa-flask text-emerald-500"></i><span>Celestial Alchemy Cauldron</span>
+            </h2>
+            <p class="text-xs text-slate-400 mb-4">Refine medicinal pills using gathered spiritual herbs and spiritual stones.</p>
+            <div class="space-y-3 max-h-[60vh] overflow-y-auto pr-1" id="alchemy-recipes-list">
+                <!-- Alchemy recipes -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Sect Affiliation & Missions Modal -->
+    <div id="sect-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="panel-bg border gold-border rounded-xl p-6 w-full max-w-lg shadow-2xl relative">
+            <button onclick="closeModal('sect-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h2 class="font-cinzel font-bold text-base text-cyan-400 mb-1 flex items-center space-x-2">
+                <i class="fa-solid fa-mountain-city text-cyan-500"></i><span>Immortal Sects & Rank Missions</span>
+            </h2>
+            <p class="text-xs text-slate-400 mb-3">Pledge loyalty to a divine sect and fulfill duties for sect contribution and promotion.</p>
+            <div class="flex space-x-2 mb-3 text-xs">
+                <button onclick="switchSectTab('factions')" id="sect-tab-factions" class="px-3 py-1 bg-cyan-700 text-white font-bold rounded">Factions</button>
+                <button onclick="switchSectTab('missions')" id="sect-tab-missions" class="px-3 py-1 bg-slate-800 text-slate-300 font-bold rounded">Sect Missions</button>
+            </div>
+            <div class="space-y-3 max-h-[50vh] overflow-y-auto pr-1" id="sect-content">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Divine Pets & Mounts Modal -->
+    <div id="pets-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="panel-bg border gold-border rounded-xl p-6 w-full max-w-lg shadow-2xl relative">
+            <button onclick="closeModal('pets-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h2 class="font-cinzel font-bold text-base text-purple-400 mb-1 flex items-center space-x-2">
+                <i class="fa-solid fa-paw text-purple-500"></i><span>Divine Pets & Celestial Mounts</span>
+            </h2>
+            <p class="text-xs text-slate-400 mb-4">Summon legendary beasts to accompany you on your quest and grant passive multipliers.</p>
+            <div class="space-y-3 max-h-[60vh] overflow-y-auto pr-1" id="pets-list">
+                <!-- Pets injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Achievements Modal -->
+    <div id="achievements-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="panel-bg border gold-border rounded-xl p-6 w-full max-w-lg shadow-2xl relative">
+            <button onclick="closeModal('achievements-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h2 class="font-cinzel font-bold text-base text-amber-400 mb-1 flex items-center space-x-2">
+                <i class="fa-solid fa-trophy text-amber-500"></i><span>Immortal Achievements</span>
+            </h2>
+            <p class="text-xs text-slate-400 mb-4">Accomplish legendary milestones across your cosmic journey to claim rewards.</p>
+            <div class="space-y-2.5 max-h-[60vh] overflow-y-auto pr-1" id="achievements-list">
+                <!-- Achievements injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Reincarnation Modal -->
+    <div id="reincarnation-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
+        <div class="panel-bg border gold-border rounded-xl p-8 w-full max-w-md text-center shadow-2xl relative">
+            <div class="w-16 h-16 rounded-full bg-amber-600/20 border border-amber-500/50 flex items-center justify-center mx-auto mb-4 gold-glow">
+                <i class="fa-solid fa-dharmachakra text-3xl text-amber-400"></i>
+            </div>
+            <h2 class="font-cinzel font-bold text-xl text-amber-400 mb-2">Cycle of Samsara Completed</h2>
+            <p id="reincarnation-reason" class="text-slate-300 text-xs mb-6">Your physical body has perished, but your immortal soul transcends into a new birth with elevated aptitudes!</p>
+            <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 text-xs text-slate-300 mb-6 space-y-1 text-left">
+                <p class="font-bold text-amber-400 mb-1">Reincarnation Bonuses Gained:</p>
+                <p>• All Attribute Aptitudes permanently increased by <span class="text-amber-300 font-bold">+0.5</span></p>
+                <p>• Progression advances towards higher Yuga cycles.</p>
+            </div>
+            <button onclick="executeReincarnation()" class="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-bold rounded-lg shadow-lg transition text-xs">
+                Begin Next Life
+            </button>
+        </div>
+    </div>
+
+    <!-- Guide Modal -->
+    <div id="guide-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="panel-bg border gold-border rounded-xl p-6 w-full max-w-lg shadow-2xl relative max-h-[85vh] flex flex-col">
+            <button onclick="closeModal('guide-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h2 class="font-cinzel font-bold text-base text-amber-400 mb-3 flex items-center space-x-2">
+                <i class="fa-solid fa-book-open text-amber-500"></i><span>Path to Immortality Guide</span>
+            </h2>
+            <div class="space-y-3 text-xs text-slate-300 overflow-y-auto pr-2 leading-relaxed">
+                <p>Welcome, aspirant soul, to <strong>Yuga Idle: Chronicles of the Trimurti</strong>. Cultivate your mind, body, and spirit across cosmic Yugas to attain supreme immortality.</p>
+                <p><strong>Artifacts & Equipment:</strong> Equip powerful weapons, armor, talismans, and mounts found in pavilions or boss raids to multiply your combat and attribute power.</p>
+                <p><strong>Divine Pets:</strong> Summon mythical companions like the Garuda or Celestial Fox to boost passive Qi gathering and attribute gains.</p>
+                <p><strong>Sect Missions:</strong> Join a sect and dispatch yourself on missions to earn contribution points and ascend in rank from Outer Disciple to Elder!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="panel-bg border gold-border rounded-xl p-6 w-full max-w-md shadow-2xl relative">
+            <button onclick="closeModal('settings-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h2 class="font-cinzel font-bold text-base text-amber-400 mb-4 flex items-center space-x-2">
+                <i class="fa-solid fa-gear text-amber-500"></i><span>Game Settings</span>
+            </h2>
+            <div class="space-y-4 text-xs text-slate-300">
+                <div class="flex justify-between items-center">
+                    <span>Export Save Data</span>
+                    <button onclick="exportSave()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded border gold-border font-bold">Export</button>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span>Import Save Data</span>
+                    <button onclick="importSave()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded border gold-border font-bold">Import</button>
+                </div>
+                <div class="flex justify-between items-center pt-3 border-t border-slate-800">
+                    <span class="text-red-400">Hard Reset Progress</span>
+                    <button onclick="hardReset()" class="px-3 py-1.5 bg-red-950 hover:bg-red-900 text-red-300 rounded border border-red-800 font-bold">Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let audioEnabled = true;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playTone(freq, type, duration) {
+            if (!audioEnabled) return;
+            try {
+                initAudio();
+                if (!audioCtx) return;
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = type || 'sine';
+                osc.frequency.value = freq || 440;
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        function switchMobileTab(tabName) {
+            const panes = ['pane-dashboard', 'pane-activities', 'pane-combat', 'pane-inventory', 'pane-log'];
+            const btnIds = ['tab-btn-dashboard', 'tab-btn-activities', 'tab-btn-combat', 'tab-btn-inventory', 'tab-btn-log'];
+            
+            panes.forEach((paneId, index) => {
+                let el = document.getElementById(paneId);
+                let btn = document.getElementById(btnIds[index]);
+                if (paneId.includes(tabName)) {
+                    el.classList.remove('hidden');
+                    el.classList.add('flex');
+                    btn.className = 'flex-1 py-1 px-2 rounded text-center font-bold text-amber-400 bg-amber-950/40 border border-amber-600/40 flex items-center justify-center space-x-1.5';
+                } else {
+                    el.classList.add('hidden');
+                    el.classList.remove('flex');
+                    btn.className = 'flex-1 py-1 px-2 rounded text-center font-medium text-slate-400 hover:text-white flex items-center justify-center space-x-1.5';
+                }
+            });
+        }
+
+        const realms = [
+            { name: 'Mortal Body', reqAttr: 0, lifeExp: 30 },
+            { name: 'Qi Condensation', reqAttr: 15, lifeExp: 60 },
+            { name: 'Foundation Establishment', reqAttr: 40, lifeExp: 120 },
+            { name: 'Golden Core', reqAttr: 90, lifeExp: 300 },
+            { name: 'Nascent Soul', reqAttr: 180, lifeExp: 800 },
+            { name: 'Deity Transformation', reqAttr: 350, lifeExp: 2000 },
+            { name: 'Trimurti Immortal', reqAttr: 700, lifeExp: 99999 }
+        ];
+
+        let gameState = {
+            version: '1.5.0',
+            realmIndex: 0,
+            ageYears: 18,
+            ageDays: 0,
+            maxAge: 30,
+            health: 100,
+            maxHealth: 100,
+            stamina: 100,
+            maxStamina: 100,
+            mana: 100,
+            maxMana: 100,
+            nutrition: 100,
+            maxNutrition: 100,
+            taels: 300,
+            spiritualStones: 5,
+            reincarnations: 0,
+            yuga: 'Kali Yuga',
+            sect: 'None',
+            sectRank: 'Outer Disciple',
+            sectContribution: 0,
+            gameSpeed: 1,
+            currentActivity: 'resting',
+            stats: {
+                totalTimePlayed: 0,
+                monstersDefeated: 0,
+                bossesDefeated: 0,
+                taelsEarned: 300,
+                pillsConsumed: 0,
+                maxAttributeLevel: 1
+            },
+            attributes: {
+                strength: { name: 'Strength', icon: 'fa-dumbbell', value: 1, aptitude: 1.0, xp: 0, maxXp: 100 },
+                toughness: { name: 'Toughness', icon: 'fa-shield-heart', value: 1, aptitude: 1.0, xp: 0, maxXp: 100 },
+                speed: { name: 'Speed', icon: 'fa-bolt', value: 1, aptitude: 1.0, xp: 0, maxXp: 100 },
+                intelligence: { name: 'Intelligence', icon: 'fa-book', value: 1, aptitude: 1.0, xp: 0, maxXp: 100 },
+                charisma: { name: 'Charisma', icon: 'fa-comments', value: 1, aptitude: 1.0, xp: 0, maxXp: 100 }
+            },
+            equipment: {
+                weapon: null,
+                armor: null,
+                talisman: null,
+                mount: null
+            },
+            pets: [
+                { id: 'fox', name: 'Celestial Fox', level: 1, bonus: '+10% Intelligence Gain', unlocked: false, cost: 50 },
+                { id: 'garuda', name: 'Divine Garuda', level: 1, bonus: '+10% Speed & Combat ATK', unlocked: false, cost: 150 },
+                { id: 'nandi', name: 'Nandi Bull', level: 1, bonus: '+15% Toughness & Health Max', unlocked: false, cost: 300 }
+            ],
+            activePet: null,
+            achievements: [
+                { id: 'first_step', name: 'Aspirant Soul', desc: 'Reach Level 5 in any attribute.', reward: '20 Spiritual Stones', completed: false },
+                { id: 'slayer', name: 'Asura Slayer', desc: 'Defeat 10 monsters in combat.', reward: '100 Taels & 10 Stones', completed: false },
+                { id: 'ascend', name: ' Qi Condensation', desc: 'Successfully breakthrough to Qi Condensation realm.', reward: '50 Stones & +5 Years Life', completed: false }
+            ],
+            activities: {
+                resting: { name: 'Resting', desc: 'Rest at home to recover Health and Stamina.', icon: 'fa-bed', staminaCost: -5, healthGain: 2, unlocked: true },
+                odd_jobs: { name: 'Odd Jobs', desc: 'Perform manual labor in the village for Taels.', icon: 'fa-briefcase', staminaCost: 8, taelsGain: 5, unlocked: true },
+                meditation: { name: 'Meditation', desc: 'Meditate under the banyan tree to gain Mana and Intelligence.', icon: 'fa-spa', staminaCost: 4, manaGain: 5, intGain: 1, unlocked: true },
+                martial_training: { name: 'Martial Training', desc: 'Practice ancient combat forms to build Strength and Speed.', icon: 'fa-hand-fist', staminaCost: 12, strGain: 1, spdGain: 1, unlocked: true },
+                herb_gathering: { name: 'Herb Gathering', desc: 'Search the mystical forest for spiritual herbs and stones.', icon: 'fa-seedling', staminaCost: 10, herbGain: true, unlocked: true },
+                sutra_study: { name: 'Sutra Study', desc: 'Study ancient cosmic scrolls for profound Intelligence.', icon: 'fa-scroll', staminaCost: 6, intGain: 2, unlocked: true },
+                ritual_offerings: { name: 'Ritual Offerings', desc: 'Perform sacred fire rituals to appease deities and gain Charisma.', icon: 'fa-fire', staminaCost: 10, chaGain: 2, manaGain: 2, unlocked: true },
+                stargazing: { name: 'Celestial Stargazing', desc: 'Gaze into the cosmos to absorb stellar Qi and boost Intelligence.', icon: 'fa-star', staminaCost: 14, intGain: 4, manaGain: 8, reqRealm: 1, unlocked: false },
+                kundalini: { name: 'Kundalini Awakening', desc: 'Awaken inner serpent energy to massively boost Toughness and Mana.', icon: 'fa-dna', staminaCost: 18, toughGain: 3, manaGain: 12, reqRealm: 1, unlocked: false },
+                mantra_chanting: { name: 'Sacred Mantra Chanting', desc: 'Chant Vedic mantras to elevate Charisma and spiritual aura.', icon: 'fa-om', staminaCost: 15, chaGain: 4, unlocked: 2, unlocked: false }
+            },
+            inventory: [
+                { id: 1, name: 'Rice Sack', type: 'food', desc: 'A modest sack of nourishing white rice.', count: 3, icon: 'fa-bowl-rice' },
+                { id: 2, name: 'Iron Sword', type: 'weapon', desc: 'A sturdy iron blade (+5 Attack).', count: 1, icon: 'fa-sword', slot: 'weapon', atk: 5 },
+                { id: 3, name: 'Ginseng Herb', type: 'herb', desc: 'Spiritual herb used in pill alchemy.', count: 2, icon: 'fa-leaf' }
+            ],
+            combat: {
+                active: false,
+                isBoss: false,
+                monsterName: '',
+                hp: 50,
+                maxHp: 50,
+                attack: 5,
+                defense: 2
+            },
+            logFilter: 'all',
+            log: [
+                { text: 'Your journey to immortality begins as a humble youth leaves home to experience the world.', type: 'cultivation', time: '18y 0d' }
+            ]
+        };
+
+        const storeItems = [
+            { id: 'pill_longevity', name: 'Longevity Pill', cost: 400, desc: 'Increases maximum lifespan by +10 years.', icon: 'fa-pills', effect: () => { gameState.maxAge += 10; gameState.stats.pillsConsumed++; addLog('Consumed a Longevity Pill. Max life expectancy increased!', 'cultivation'); showToast('+10 Years Lifespan!', 'success'); playTone(800, 'sine', 0.3); } },
+            { id: 'sack_rice', name: 'Bag of Rice (x5)', cost: 100, desc: 'Restocks your nutrition reserves.', icon: 'fa-bowl-rice', effect: () => { addInventoryItem('Rice Sack', 5, 'food', 'Nourishing rice grains.'); addLog('Purchased 5 bags of rice.', 'cultivation'); showToast('Purchased Rice Sacks', 'success'); } },
+            { id: 'sword_steel', name: 'Master Steel Sword', cost: 750, desc: 'Celestial steel weapon (+12 ATK).', icon: 'fa-khanda', effect: () => { addInventoryItem('Master Steel Sword', 1, 'weapon', 'Celestial steel weapon (+12 ATK).', 'weapon', 12); addLog('Acquired a Master Steel Sword!', 'combat'); showToast('Master Steel Sword Acquired!', 'success'); playTone(650, 'triangle', 0.4); } },
+            { id: 'jade_armor', name: 'Dragon Jade Robe', cost: 900, desc: 'Protective immortal robe (+8 Defense).', icon: 'fa-shield-halved', effect: () => { addInventoryItem('Dragon Jade Robe', 1, 'armor', 'Protective immortal robe (+8 DEF).', 'armor', 0, 8); addLog('Acquired Dragon Jade Robe!', 'combat'); showToast('Dragon Jade Robe Acquired!', 'success'); playTone(700, 'triangle', 0.4); } }
+        ];
+
+        const alchemyRecipes = [
+            { id: 'longevity_pill', name: 'Longevity Pill', reqHerb: 3, reqStones: 2, desc: 'Refined pill that extends maximum life expectancy by +15 years.', effect: () => { gameState.maxAge += 15; gameState.stats.pillsConsumed++; addLog('Successfully refined and consumed a Longevity Pill (+15 Years)!', 'cultivation'); showToast('+15 Years Life Expectancy!', 'success'); } },
+            { id: 'qi_pill', name: 'Qi Gathering Pill', reqHerb: 2, reqStones: 1, desc: 'Accelerates attribute cultivation and mana reserves.', effect: () => { gainAttributeXP('intelligence', 30); gameState.mana = Math.min(gameState.maxMana, gameState.mana + 50); addLog('Refined a Qi Gathering Pill, boosting Mana and Intelligence!', 'cultivation'); showToast('Qi Pill Consumed!', 'success'); } }
+        ];
+
+        const sectList = [
+            { id: 'none', name: 'Independent Wanderer', bonus: 'No restrictions, free spirit.', join: () => { gameState.sect = 'None'; gameState.sectRank = 'Independent'; addLog('You chose to wander the path alone.', 'cultivation'); showToast('Set sect to Independent', 'success'); closeModal('sect-modal'); } },
+            { id: 'brahma', name: 'Brahma Wisdom Sect', bonus: '+25% Intelligence & Sutra Study gains.', join: () => { gameState.sect = 'Brahma Wisdom Sect'; gameState.sectRank = 'Outer Disciple'; addLog('You joined the Brahma Wisdom Sect.', 'cultivation'); showToast('Joined Brahma Sect', 'success'); closeModal('sect-modal'); } },
+            { id: 'shiva', name: 'Shiva Ascetic Order', bonus: '+25% Strength & Martial Training gains.', join: () => { gameState.sect = 'Shiva Ascetic Order'; gameState.sectRank = 'Outer Disciple'; addLog('You joined the Shiva Ascetic Order.', 'cultivation'); showToast('Joined Shiva Order', 'success'); closeModal('sect-modal'); } },
+            { id: 'vishnu', name: 'Vishnu Devotional League', bonus: '+25% Stamina regeneration & Charisma gains.', join: () => { gameState.sect = 'Vishnu Devotional League'; gameState.sectRank = 'Outer Disciple'; addLog('You joined the Vishnu Devotional League.', 'cultivation'); showToast('Joined Vishnu League', 'success'); closeModal('sect-modal'); } }
+        ];
+
+        const sectMissionsList = [
+            { id: 'patrol', name: 'Patrol Sect Perimeters', rewardStones: 2, rewardContr: 10, desc: 'Ensure no evil spirits breach sect grounds.' },
+            { id: 'gather', name: 'Gather Medicinal Herbs', rewardStones: 3, rewardContr: 15, desc: 'Collect rare herbs for the elder alchemists.' },
+            { id: 'meditate', name: 'Guard the Spirit Spring', rewardStones: 5, rewardContr: 25, desc: 'Meditate by the pure spring to absorb divine Qi.' }
+        ];
+
+        window.onload = function() {
+            loadGame();
+            renderAttributes();
+            renderActivities();
+            renderInventory();
+            renderEquipment();
+            renderAlchemy();
+            renderLog();
+            updateYugaCycle();
+            updateUI();
+            
+            setInterval(gameTick, 1000);
+        };
+
+        function gameTick() {
+            gameState.stats.totalTimePlayed += gameState.gameSpeed;
+            gameState.ageDays += 5 * gameState.gameSpeed;
+            if (gameState.ageDays >= 365) {
+                gameState.ageYears += Math.floor(gameState.ageDays / 365);
+                gameState.ageDays = gameState.ageDays % 365;
+                addLog(`You have grown older. You are now ${gameState.ageYears} years old.`, 'aging');
+                playTone(500, 'sine', 0.2);
+            }
+
+            if (gameState.ageYears >= gameState.maxAge || gameState.health <= 0) {
+                triggerDeath(gameState.health <= 0 ? 'Your physical body has perished from wounds or illness.' : 'You have reached the natural end of your mortal lifespan.');
+                return;
+            }
+
+            checkActivityEvolution();
+            checkAchievements();
+
+            gameState.nutrition = Math.max(0, gameState.nutrition - 1);
+            if (gameState.nutrition <= 20) {
+                let foodItem = gameState.inventory.find(i => i.type === 'food' && i.count > 0);
+                if (foodItem) {
+                    foodItem.count--;
+                    gameState.nutrition = Math.min(100, gameState.nutrition + 40);
+                    if (foodItem.count <= 0) gameState.inventory = gameState.inventory.filter(i => i !== foodItem);
+                    addLog('You consumed food from your inventory to maintain nutrition.', 'cultivation');
+                } else if (gameState.taels >= 1) {
+                    gameState.taels -= 1;
+                    gameState.nutrition = Math.min(100, gameState.nutrition + 30);
+                    addLog('Out of food provisions, you spent 1 Tael on a bowl of rice.', 'cultivation');
+                } else {
+                    gameState.health = Math.max(0, gameState.health - 5);
+                    addLog('Starvation is damaging your health!', 'system');
+                }
+            }
+
+            processActivity();
+
+            if (gameState.combat.active) {
+                processCombatTick();
+            }
+
+            updateUI();
+        }
+
+        function checkActivityEvolution() {
+            if (gameState.realmIndex >= 1 || gameState.attributes.intelligence.value >= 10) {
+                if (!gameState.activities.stargazing.unlocked) {
+                    gameState.activities.stargazing.unlocked = true;
+                    addLog('✨ Advanced Activity Unlocked: Celestial Stargazing!', 'cultivation');
+                    showToast('Unlocked Celestial Stargazing!', 'success');
+                    renderActivities();
+                }
+            }
+            if (gameState.realmIndex >= 1 || gameState.attributes.toughness.value >= 10) {
+                if (!gameState.activities.kundalini.unlocked) {
+                    gameState.activities.kundalini.unlocked = true;
+                    addLog('✨ Advanced Activity Unlocked: Kundalini Awakening!', 'cultivation');
+                    showToast('Unlocked Kundalini Awakening!', 'success');
+                    renderActivities();
+                }
+            }
+            if (gameState.realmIndex >= 2 || gameState.attributes.charisma.value >= 15) {
+                if (!gameState.activities.mantra_chanting.unlocked) {
+                    gameState.activities.mantra_chanting.unlocked = true;
+                    addLog('✨ Advanced Activity Unlocked: Sacred Mantra Chanting!', 'cultivation');
+                    showToast('Unlocked Sacred Mantra Chanting!', 'success');
+                    renderActivities();
+                }
+            }
+        }
+
+        function checkAchievements() {
+            gameState.achievements.forEach(ach => {
+                if (ach.completed) return;
+                if (ach.id === 'first_step') {
+                    if (Object.values(gameState.attributes).some(attr => attr.value >= 5)) {
+                        completeAchievement(ach);
+                    }
+                } else if (ach.id === 'slayer') {
+                    if (gameState.stats.monstersDefeated >= 10) {
+                        completeAchievement(ach);
+                    }
+                } else if (ach.id === 'ascend') {
+                    if (gameState.realmIndex >= 1) {
+                        completeAchievement(ach);
+                    }
+                }
+            });
+        }
+
+        function completeAchievement(ach) {
+            ach.completed = true;
+            gameState.spiritualStones += 20;
+            addLog(`🏆 Achievement Unlocked: ${ach.name}! Reward claimed.`, 'cultivation');
+            showToast(`Achievement: ${ach.name}!`, 'success');
+            playTone(850, 'sine', 0.4);
+        }
+
+        function processActivity() {
+            const act = gameState.activities[gameState.currentActivity];
+            if (!act || !act.unlocked) {
+                gameState.currentActivity = 'resting';
+                return;
+            }
+
+            if (act.staminaCost > 0 && gameState.stamina < act.staminaCost) {
+                gameState.currentActivity = 'resting';
+                return;
+            }
+
+            gameState.stamina = Math.min(gameState.maxStamina, Math.max(0, gameState.stamina - (act.staminaCost || -2)));
+
+            let sectMult = 1.0;
+            if (gameState.sect === 'Brahma Wisdom Sect' && (gameState.currentActivity === 'sutra_study' || gameState.currentActivity === 'stargazing')) sectMult = 1.25;
+            if (gameState.sect === 'Shiva Ascetic Order' && (gameState.currentActivity === 'martial_training' || gameState.currentActivity === 'kundalini')) sectMult = 1.25;
+            if (gameState.sect === 'Vishnu Devotional League' && (gameState.currentActivity === 'ritual_offerings' || gameState.currentActivity === 'mantra_chanting')) sectMult = 1.25;
+
+            let petMult = 1.0;
+            if (gameState.activePet === 'fox' && gameState.currentActivity.includes('meditation')) petMult = 1.1;
+
+            if (gameState.currentActivity === 'resting') {
+                gameState.health = Math.min(gameState.maxHealth, gameState.health + (act.healthGain || 2));
+            } else if (gameState.currentActivity === 'odd_jobs') {
+                let earned = act.taelsGain || 2;
+                gameState.taels += earned;
+                gameState.stats.taelsEarned += earned;
+                gainAttributeXP('strength', 0.5 * sectMult * petMult);
+            } else if (gameState.currentActivity === 'meditation') {
+                gameState.mana = Math.min(gameState.maxMana, gameState.mana + (act.manaGain || 3));
+                gainAttributeXP('intelligence', (act.intGain || 1) * sectMult * petMult);
+            } else if (gameState.currentActivity === 'martial_training') {
+                gainAttributeXP('strength', (act.strGain || 1) * sectMult * petMult);
+                gainAttributeXP('speed', (act.spdGain || 1) * sectMult * petMult);
+            } else if (gameState.currentActivity === 'herb_gathering') {
+                if (Math.random() < 0.4) {
+                    addInventoryItem('Ginseng Herb', 1, 'herb', 'Spiritual herb used in pill alchemy.');
+                    addLog('You discovered a wild Ginseng Herb!', 'cultivation');
+                }
+                if (Math.random() < 0.2) {
+                    gameState.spiritualStones += 1;
+                    addLog('You unearthed a Spiritual Stone!', 'cultivation');
+                }
+                gainAttributeXP('speed', 0.8 * sectMult * petMult);
+            } else if (gameState.currentActivity === 'sutra_study') {
+                gainAttributeXP('intelligence', (act.intGain || 2) * sectMult * petMult);
+            } else if (gameState.currentActivity === 'ritual_offerings') {
+                gameState.mana = Math.min(gameState.maxMana, gameState.mana + (act.manaGain || 2));
+                gainAttributeXP('charisma', (act.chaGain || 2) * sectMult * petMult);
+            } else if (gameState.currentActivity === 'stargazing') {
+                gameState.mana = Math.min(gameState.maxMana, gameState.mana + (act.manaGain || 6));
+                gainAttributeXP('intelligence', (act.intGain || 3) * sectMult * petMult);
+            } else if (gameState.currentActivity === 'kundalini') {
+                gameState.mana = Math.min(gameState.maxMana, gameState.mana + (act.manaGain || 8));
+                gainAttributeXP('toughness', (act.toughGain || 2) * sectMult * petMult);
+            } else if (gameState.currentActivity === 'mantra_chanting') {
+                gainAttributeXP('charisma', (act.chaGain || 3) * sectMult * petMult);
+            }
+        }
+
+        function gainAttributeXP(attrKey, amount) {
+            let attr = gameState.attributes[attrKey];
+            if (!attr) return;
+            let effectiveGain = amount * attr.aptitude;
+            attr.xp += effectiveGain;
+            if (attr.xp >= attr.maxXp) {
+                attr.xp = 0;
+                attr.value += 1;
+                attr.maxXp = Math.floor(attr.maxXp * 1.3);
+                if (attr.value > gameState.stats.maxAttributeLevel) {
+                    gameState.stats.maxAttributeLevel = attr.value;
+                }
+                addLog(`Your ${attr.name} has increased to Level ${attr.value}!`, 'cultivation');
+                showToast(`${attr.name} Lvl ${attr.value}!`, 'success');
+                playTone(600, 'sine', 0.3);
+            }
+        }
+
+        function openBreakthroughModal() {
+            let nextRealm = realms[gameState.realmIndex + 1];
+            if (!nextRealm) {
+                showToast('You have attained the highest possible realm!', 'system');
+                return;
+            }
+            document.getElementById('bt-current').innerText = realms[gameState.realmIndex].name;
+            document.getElementById('bt-next').innerText = nextRealm.name;
+            let avgAttr = (gameState.attributes.strength.value + gameState.attributes.intelligence.value + gameState.attributes.toughness.value) / 3;
+            let chance = Math.min(95, Math.floor((avgAttr / nextRealm.reqAttr) * 80));
+            document.getElementById('bt-chance').innerText = `${chance}%`;
+            openModal('breakthrough-modal');
+        }
+
+        function attemptBreakthrough() {
+            let nextRealm = realms[gameState.realmIndex + 1];
+            if (!nextRealm) return;
+            let avgAttr = (gameState.attributes.strength.value + gameState.attributes.intelligence.value + gameState.attributes.toughness.value) / 3;
+            let chance = Math.min(0.95, (avgAttr / nextRealm.reqAttr) * 0.8);
+            
+            if (gameState.spiritualStones < 10) {
+                showToast('Need at least 10 Spiritual Stones to attempt breakthrough!', 'error');
+                return;
+            }
+            gameState.spiritualStones -= 10;
+
+            if (Math.random() <= chance) {
+                gameState.realmIndex++;
+                gameState.maxAge = realms[gameState.realmIndex].lifeExp;
+                addLog(`Successful Breakthrough! You have ascended to ${realms[gameState.realmIndex].name}!`, 'cultivation');
+                showToast(`Ascended to ${realms[gameState.realmIndex].name}!`, 'success');
+                playTone(900, 'sine', 0.5);
+                closeModal('breakthrough-modal');
+            } else {
+                gameState.health = Math.max(10, gameState.health - 30);
+                addLog('Breakthrough failed! Qi backlash damaged your physical health.', 'system');
+                showToast('Breakthrough Failed!', 'error');
+                playTone(200, 'sawtooth', 0.4);
+                closeModal('breakthrough-modal');
+            }
+        }
+
+        function toggleCombat() {
+            if (gameState.combat.active) {
+                fleeCombat();
+            } else {
+                startCombat(false);
+            }
+        }
+
+        function triggerBossRaid() {
+            if (gameState.combat.active) return;
+            startCombat(true);
+        }
+
+        function startCombat(isBoss) {
+            let name, hp, atk, def;
+            if (isBoss) {
+                const bossNames = ['Demon King Mahishasura', 'Asura General Vritra', 'Shadow Sovereign Ravana'];
+                name = bossNames[Math.floor(Math.random() * bossNames.length)];
+                hp = 150; atk = 18; def = 8;
+                document.getElementById('monster-tier-badge').innerText = 'BOSS RAID';
+                document.getElementById('monster-tier-badge').className = 'text-[9px] px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-800 font-bold';
+            } else {
+                const monsterNames = ['Vicious Yaksha', 'Raging Asura', 'Shadow Demon', 'Rakshasa Warrior', 'Naga Serpent'];
+                name = monsterNames[Math.floor(Math.random() * monsterNames.length)];
+                let tierFactor = 1 + (gameState.reincarnations * 0.5);
+                hp = Math.floor(40 * tierFactor);
+                atk = Math.floor(6 * tierFactor);
+                def = Math.floor(3 * tierFactor);
+                document.getElementById('monster-tier-badge').innerText = 'Standard Encounter';
+                document.getElementById('monster-tier-badge').className = 'text-[9px] px-1.5 py-0.5 rounded bg-red-950 text-red-300 border border-red-800 font-bold';
+            }
+
+            gameState.combat = {
+                active: true,
+                isBoss: isBoss,
+                monsterName: name,
+                hp: hp,
+                maxHp: hp,
+                attack: atk,
+                defense: def
+            };
+            document.getElementById('monster-name').innerText = name;
+            document.getElementById('combat-panel').classList.remove('hidden');
+            document.getElementById('combat-idle-msg').classList.add('hidden');
+            document.getElementById('combat-toggle-btn').innerText = 'Flee Combat';
+            document.getElementById('combat-toggle-btn').className = 'px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs rounded transition shadow';
+            addLog(`Encountered ${isBoss ? 'BOSS' : 'wild'} ${name}! Combat has begun.`, 'combat');
+            playTone(300, 'sawtooth', 0.2);
+        }
+
+        function processCombatTick() {
+            let playerStr = gameState.attributes.strength.value;
+            let weaponBonus = gameState.equipment.weapon ? (gameState.equipment.weapon.atk || 5) : 0;
+            let armorDef = gameState.equipment.armor ? (gameState.equipment.armor.def || 0) : 0;
+            
+            let damageToMonster = Math.max(1, ((playerStr + weaponBonus) * 2) - gameState.combat.defense);
+            gameState.combat.hp -= damageToMonster;
+            
+            let damageToPlayer = Math.max(1, gameState.combat.attack - Math.floor((gameState.attributes.toughness.value + armorDef) * 1.5));
+            gameState.health = Math.max(0, gameState.health - damageToPlayer);
+
+            appendCombatSublog(`You strike ${gameState.combat.monsterName} for ${damageToMonster}. They hit you for ${damageToPlayer}.`);
+
+            if (gameState.combat.hp <= 0) {
+                let rewardTaels = gameState.combat.isBoss ? 150 : (Math.floor(Math.random() * 25) + 15);
+                let rewardStones = gameState.combat.isBoss ? 5 : (Math.random() < 0.5 ? 1 : 0);
+                gameState.taels += rewardTaels;
+                gameState.spiritualStones += rewardStones;
+                gameState.stats.taelsEarned += rewardTaels;
+                if (gameState.combat.isBoss) gameState.stats.bossesDefeated++;
+                else gameState.stats.monstersDefeated++;
+
+                addLog(`Victory! Defeated ${gameState.combat.monsterName} and looted ${rewardTaels} Taels and ${rewardStones} Stones.`, 'combat');
+                showToast(`Defeated ${gameState.combat.monsterName}!`, 'success');
+                playTone(750, 'sine', 0.4);
+                endCombat();
+            } else if (gameState.health <= 0) {
+                addLog(`Defeated by ${gameState.combat.monsterName} in battle!`, 'combat');
+                playTone(200, 'sawtooth', 0.4);
+                endCombat();
+            }
+        }
+
+        function triggerSpecialAttack() {
+            if (!gameState.combat.active) return;
+            if (gameState.mana < 20) {
+                appendCombatSublog('Not enough Mana for Spiritual Strike!');
+                return;
+            }
+            gameState.mana -= 20;
+            let intVal = gameState.attributes.intelligence.value;
+            let damage = intVal * 6;
+            gameState.combat.hp -= damage;
+            appendCombatSublog(`Spiritual Strike unleashed for ${damage} damage!`);
+            playTone(900, 'sine', 0.3);
+
+            if (gameState.combat.hp <= 0) {
+                let rewardTaels = 60;
+                gameState.taels += rewardTaels;
+                gameState.spiritualStones += 2;
+                gameState.stats.taelsEarned += rewardTaels;
+                gameState.stats.monstersDefeated++;
+                addLog(`Glorious victory! Defeated ${gameState.combat.monsterName} with spiritual magic.`, 'combat');
+                showToast(`Critical victory over ${gameState.combat.monsterName}!`, 'success');
+                endCombat();
+            }
+        }
+
+        function fleeCombat() {
+            addLog(`Fled safely from ${gameState.combat.monsterName}.`, 'combat');
+            endCombat();
+        }
+
+        function endCombat() {
+            gameState.combat.active = false;
+            document.getElementById('combat-panel').classList.add('hidden');
+            document.getElementById('combat-idle-msg').classList.remove('hidden');
+            document.getElementById('combat-toggle-btn').innerText = 'Look for Trouble';
+            document.getElementById('combat-toggle-btn').className = 'px-2.5 py-1 bg-red-700 hover:bg-red-600 text-white font-bold text-xs rounded transition shadow';
+        }
+
+        function updateYugaCycle() {
+            if (gameState.reincarnations >= 6) gameState.yuga = 'Satya Yuga';
+            else if (gameState.reincarnations >= 4) gameState.yuga = 'Treta Yuga';
+            else if (gameState.reincarnations >= 2) gameState.yuga = 'Dvapara Yuga';
+            else gameState.yuga = 'Kali Yuga';
+            document.getElementById('header-yuga').innerText = gameState.yuga;
+            document.getElementById('header-realm').innerText = realms[gameState.realmIndex].name;
+        }
+
+        function triggerDeath(reason) {
+            document.getElementById('reincarnation-reason').innerText = reason + ' Your soul enters the cycle of Samsara.';
+            openModal('reincarnation-modal');
+            playTone(150, 'sawtooth', 0.6);
+        }
+
+        function executeReincarnation() {
+            gameState.reincarnations++;
+            gameState.realmIndex = 0;
+            gameState.ageYears = 18;
+            gameState.ageDays = 0;
+            gameState.health = 100;
+            gameState.maxHealth = 100;
+            gameState.stamina = 100;
+            gameState.maxStamina = 100;
+            gameState.mana = 100;
+            gameState.maxMana = 100;
+            gameState.nutrition = 100;
+            gameState.maxAge = 30 + (gameState.reincarnations * 10);
+            
+            for (let key in gameState.attributes) {
+                gameState.attributes[key].aptitude += 0.5;
+                gameState.attributes[key].xp = 0;
+            }
+
+            updateYugaCycle();
+            closeModal('reincarnation-modal');
+            addLog(`Reincarnation #${gameState.reincarnations} completed! Aptitudes have grown stronger in ${gameState.yuga}.`, 'system');
+            showToast(`Reincarnated into ${gameState.yuga}!`, 'success');
+            playTone(850, 'sine', 0.5);
+        }
+
+        function addInventoryItem(name, count, type, desc, slot = null, atk = 0, def = 0) {
+            let existing = gameState.inventory.find(i => i.name === name);
+            if (existing && !slot) {
+                existing.count += count;
+            } else {
+                gameState.inventory.push({ id: Date.now(), name, count, type, desc, icon: 'fa-box', slot, atk, def });
+            }
+            renderInventory();
+        }
+
+        function sortInventory() {
+            gameState.inventory.sort((a, b) => (b.count || 1) - (a.count || 1));
+            renderInventory();
+            addLog('Inventory sorted.', 'system');
+        }
+
+        function renderAttributes() {
+            const container = document.getElementById('attributes-container');
+            container.innerHTML = '';
+            for (let key in gameState.attributes) {
+                let attr = gameState.attributes[key];
+                let percent = Math.floor((attr.xp / attr.maxXp) * 100);
+                container.innerHTML += `
+                    <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800">
+                        <div class="flex justify-between items-center text-[11px] mb-1">
+                            <span class="font-medium text-slate-200 flex items-center space-x-1.5">
+                                <i class="fa-solid ${attr.icon} text-amber-400 w-3.5"></i>
+                                <span>${attr.name}</span>
+                            </span>
+                            <span class="text-amber-300 font-bold">Lvl ${attr.value} <span class="text-[9px] text-slate-400">(Apt: ${attr.aptitude.toFixed(1)}x)</span></span>
+                        </div>
+                        <div class="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                            <div class="bg-amber-500 h-full transition-all duration-300" style="width: ${percent}%;"></div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderActivities() {
+            const container = document.getElementById('activities-container');
+            container.innerHTML = '';
+            for (let key in gameState.activities) {
+                let act = gameState.activities[key];
+                let isActive = gameState.currentActivity === key;
+                if (!act.unlocked) {
+                    container.innerHTML += `
+                        <div class="p-2.5 rounded-lg border border-slate-900 bg-slate-950/40 opacity-50 flex flex-col justify-between">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <i class="fa-solid fa-lock text-slate-500"></i>
+                                <span class="font-cinzel font-bold text-xs text-slate-500">${act.name} (Locked)</span>
+                            </div>
+                            <p class="text-[10px] text-slate-600">${act.desc}</p>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML += `
+                        <button onclick="setActivity('${key}')" class="p-2.5 rounded-lg border text-left transition flex flex-col justify-between ${isActive ? 'bg-amber-950/40 border-amber-500 gold-glow' : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'}">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <i class="fa-solid ${act.icon} text-amber-400"></i>
+                                <span class="font-cinzel font-bold text-xs text-slate-200">${act.name}</span>
+                            </div>
+                            <p class="text-[10px] text-slate-400 line-clamp-2">${act.desc}</p>
+                        </button>
+                    `;
+                }
+            }
+        }
+
+        function setActivity(key) {
+            let act = gameState.activities[key];
+            if (!act || !act.unlocked) {
+                showToast('This activity is locked! Progress your attributes or realms.', 'error');
+                return;
+            }
+            gameState.currentActivity = key;
+            renderActivities();
+            addLog(`Switched activity to: ${act.name}`, 'cultivation');
+        }
+
+        function renderEquipment() {
+            const container = document.getElementById('equipment-slots');
+            const slots = [
+                { key: 'weapon', name: 'Weapon', icon: 'fa-sword' },
+                { key: 'armor', name: 'Armor', icon: 'fa-shield-halved' },
+                { key: 'talisman', name: 'Talisman', icon: 'fa-scroll' },
+                { key: 'mount', name: 'Mount', icon: 'fa-horse' }
+            ];
+
+            container.innerHTML = '';
+            slots.forEach(s => {
+                let eq = gameState.equipment[s.key];
+                if (eq) {
+                    container.innerHTML += `
+                        <div onclick="unequipItem('${s.key}')" class="bg-slate-950 p-2 rounded border border-amber-600/50 cursor-pointer flex flex-col items-center justify-center relative group" title="Click to unequip ${eq.name}">
+                            <i class="fa-solid ${eq.icon || s.icon} text-amber-400 text-sm mb-0.5"></i>
+                            <span class="text-[8px] text-amber-300 truncate w-full text-center font-bold">${eq.name}</span>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML += `
+                        <div class="bg-slate-950/40 p-2 rounded border border-slate-900 flex flex-col items-center justify-center text-slate-600" title="Empty ${s.name} Slot">
+                            <i class="fa-solid ${s.icon} text-xs mb-0.5"></i>
+                            <span class="text-[8px]">${s.name}</span>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        function renderInventory() {
+            const grid = document.getElementById('inventory-grid');
+            grid.innerHTML = '';
+            document.getElementById('inv-count').innerText = gameState.inventory.reduce((acc, item) => acc + (item.count || 1), 0);
+
+            for (let i = 0; i < 15; i++) {
+                let item = gameState.inventory[i];
+                if (item) {
+                    grid.innerHTML += `
+                        <div onclick="inspectItem('${item.name}')" class="bg-slate-950 p-2 rounded border border-slate-800 hover:border-amber-500/60 cursor-pointer flex flex-col items-center justify-center relative group">
+                            <i class="fa-solid ${item.icon || 'fa-box'} text-amber-400 text-sm mb-1"></i>
+                            <span class="text-[9px] text-slate-300 truncate w-full text-center">${item.name}</span>
+                            ${item.count ? `<span class="absolute top-0.5 right-1 text-[9px] text-amber-300 font-bold">${item.count}</span>` : ''}
+                        </div>
+                    `;
+                } else {
+                    grid.innerHTML += `<div class="bg-slate-950/40 rounded border border-slate-900"></div>`;
+                }
+            }
+            renderEquipment();
+        }
+
+        function inspectItem(name) {
+            let item = gameState.inventory.find(i => i.name === name);
+            if (item) {
+                let equipBtn = item.slot ? `<button onclick="equipItem('${item.name}')" class="mt-1 px-2 py-0.5 bg-amber-600 text-slate-950 font-bold rounded text-[10px]">Equip</button>` : '';
+                document.getElementById('item-tooltip').innerHTML = `<strong class="text-amber-400">${item.name}</strong>: ${item.desc} ${equipBtn}`;
+            }
+        }
+
+        function equipItem(name) {
+            let itemIndex = gameState.inventory.findIndex(i => i.name === name);
+            if (itemIndex === -1) return;
+            let item = gameState.inventory[itemIndex];
+            if (!item.slot) return;
+
+            if (gameState.equipment[item.slot]) {
+                let oldEq = gameState.equipment[item.slot];
+                addInventoryItem(oldEq.name, 1, oldEq.type, oldEq.desc, oldEq.slot, oldEq.atk, oldEq.def);
+            }
+
+            gameState.equipment[item.slot] = item;
+            gameState.inventory.splice(itemIndex, 1);
+            renderInventory();
+            addLog(`Equipped ${item.name}.`, 'combat');
+            showToast(`Equipped ${item.name}`, 'success');
+        }
+
+        function unequipItem(slotKey) {
+            let eq = gameState.equipment[slotKey];
+            if (!eq) return;
+            addInventoryItem(eq.name, 1, eq.type, eq.desc, eq.slot, eq.atk, eq.def);
+            gameState.equipment[slotKey] = null;
+            renderInventory();
+            addLog(`Unequipped ${eq.name}.`, 'combat');
+        }
+
+        function renderLog() {
+            const logContainer = document.getElementById('event-log');
+            logContainer.innerHTML = '';
+            let filtered = gameState.log.filter(entry => gameState.logFilter === 'all' || entry.type === gameState.logFilter);
+            filtered.slice(-50).reverse().forEach(entry => {
+                logContainer.innerHTML += `<div class="border-b border-slate-900/60 pb-1"><span class="text-slate-500">[${entry.time}]</span> ${entry.text}</div>`;
+            });
+        }
+
+        function addLog(text, type = 'cultivation') {
+            let timeStr = `${gameState.ageYears}y ${gameState.ageDays}d`;
+            gameState.log.push({ text, type, time: timeStr });
+            renderLog();
+        }
+
+        function setLogFilter(filter) {
+            gameState.logFilter = filter;
+            ['all', 'combat', 'cultivation'].forEach(f => {
+                let btn = document.getElementById(`filter-${f}`);
+                if (f === filter) {
+                    btn.className = 'px-2 py-0.5 rounded bg-amber-600 text-slate-950 font-bold';
+                } else {
+                    btn.className = 'px-2 py-0.5 rounded bg-slate-800 text-slate-300';
+                }
+            });
+            renderLog();
+        }
+
+        function appendCombatSublog(text) {
+            const sublog = document.getElementById('combat-sublog');
+            sublog.innerHTML += `<div>> ${text}</div>`;
+            sublog.scrollTop = sublog.scrollHeight;
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `px-3 py-2 rounded-lg text-xs font-bold shadow-lg border floating-toast ${type === 'success' ? 'bg-amber-950/90 text-amber-300 border-amber-600' : 'bg-slate-900/90 text-slate-200 border-slate-700'}`;
+            toast.innerHTML = `<i class="fa-solid fa-circle-info mr-1"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }
+
+        function renderStore() {
+            const list = document.getElementById('store-items-list');
+            list.innerHTML = '';
+            storeItems.forEach(item => {
+                list.innerHTML += `
+                    <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800 flex justify-between items-center">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded bg-slate-950 border gold-border flex items-center justify-center text-amber-400 text-lg">
+                                <i class="fa-solid ${item.icon}"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-cinzel font-bold text-amber-400 text-xs">${item.name}</h4>
+                                <p class="text-[10px] text-slate-400">${item.desc}</p>
+                                <span class="text-xs text-amber-300 font-bold mt-1 inline-block"><i class="fa-solid fa-coins text-amber-400"></i> ${item.cost} Taels</span>
+                            </div>
+                        </div>
+                        <button onclick="buyStoreItem('${item.id}')" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded text-xs transition">
+                            Buy
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function buyStoreItem(id) {
+            let item = storeItems.find(i => i.id === id);
+            if (!item) return;
+            if (gameState.taels >= item.cost) {
+                gameState.taels -= item.cost;
+                item.effect();
+                updateUI();
+                renderStore();
+            } else {
+                showToast('Not enough Taels!', 'error');
+                playTone(180, 'sawtooth', 0.2);
+            }
+        }
+
+        function renderAlchemy() {
+            const list = document.getElementById('alchemy-recipes-list');
+            list.innerHTML = '';
+            let herbCount = gameState.inventory.find(i => i.name === 'Ginseng Herb')?.count || 0;
+            
+            alchemyRecipes.forEach(rec => {
+                list.innerHTML += `
+                    <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800 flex justify-between items-center">
+                        <div>
+                            <h4 class="font-cinzel font-bold text-emerald-400 text-xs">${rec.name}</h4>
+                            <p class="text-[10px] text-slate-400 mb-1">${rec.desc}</p>
+                            <span class="text-[10px] text-slate-300">Requires: <span class="${herbCount >= rec.reqHerb ? 'text-emerald-400' : 'text-red-400'}">${rec.reqHerb} Herbs</span> & <span class="${gameState.spiritualStones >= rec.reqStones ? 'text-cyan-400' : 'text-red-400'}">${rec.reqStones} Stones</span></span>
+                        </div>
+                        <button onclick="refinePill('${rec.id}')" class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded text-xs transition">
+                            Refine
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function refinePill(id) {
+            let rec = alchemyRecipes.find(r => r.id === id);
+            if (!rec) return;
+            let herbItem = gameState.inventory.find(i => i.name === 'Ginseng Herb');
+            let herbCount = herbItem ? herbItem.count : 0;
+
+            if (herbCount >= rec.reqHerb && gameState.spiritualStones >= rec.reqStones) {
+                herbItem.count -= rec.reqHerb;
+                if (herbItem.count <= 0) gameState.inventory = gameState.inventory.filter(i => i !== herbItem);
+                gameState.spiritualStones -= rec.reqStones;
+                rec.effect();
+                renderAlchemy();
+                renderInventory();
+                updateUI();
+            } else {
+                showToast('Insufficient herbs or spiritual stones!', 'error');
+                playTone(180, 'sawtooth', 0.2);
+            }
+        }
+
+        function switchSectTab(tab) {
+            const factionsBtn = document.getElementById('sect-tab-factions');
+            const missionsBtn = document.getElementById('sect-tab-missions');
+            if (tab === 'factions') {
+                factionsBtn.className = 'px-3 py-1 bg-cyan-700 text-white font-bold rounded';
+                missionsBtn.className = 'px-3 py-1 bg-slate-800 text-slate-300 font-bold rounded';
+                renderSects();
+            } else {
+                missionsBtn.className = 'px-3 py-1 bg-cyan-700 text-white font-bold rounded';
+                factionsBtn.className = 'px-3 py-1 bg-slate-800 text-slate-300 font-bold rounded';
+                renderSectMissions();
+            }
+        }
+
+        function renderSects() {
+            const container = document.getElementById('sect-content');
+            container.innerHTML = `<div class="mb-2 text-xs text-amber-300">Current Rank: <span class="font-bold">${gameState.sectRank}</span> | Contribution: <span class="font-bold">${gameState.sectContribution}</span></div>`;
+            sectList.forEach(sect => {
+                let isCurrent = gameState.sect === sect.name;
+                container.innerHTML += `
+                    <div class="p-3 rounded-lg border flex justify-between items-center ${isCurrent ? 'bg-cyan-950/40 border-cyan-600' : 'bg-slate-900/80 border-slate-800'}">
+                        <div>
+                            <h4 class="font-cinzel font-bold text-xs text-cyan-300">${sect.name}</h4>
+                            <p class="text-[10px] text-slate-400">${sect.bonus}</p>
+                        </div>
+                        <button onclick="sect.join()" class="px-3 py-1.5 ${isCurrent ? 'bg-slate-800 text-slate-400' : 'bg-cyan-700 hover:bg-cyan-600 text-white'} font-bold rounded text-xs transition">
+                            ${isCurrent ? 'Affiliated' : 'Join'}
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function renderSectMissions() {
+            const container = document.getElementById('sect-content');
+            if (gameState.sect === 'None') {
+                container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">You must join a Sect before undertaking missions!</div>`;
+                return;
+            }
+            container.innerHTML = `<div class="mb-2 text-xs text-amber-300">Sect Rank: <span class="font-bold">${gameState.sectRank}</span> | Contribution: <span class="font-bold">${gameState.sectContribution}</span></div>`;
+            sectMissionsList.forEach(mission => {
+                container.innerHTML += `
+                    <div class="p-3 rounded-lg border bg-slate-900/80 border-slate-800 flex justify-between items-center">
+                        <div>
+                            <h4 class="font-cinzel font-bold text-xs text-amber-300">${mission.name}</h4>
+                            <p class="text-[10px] text-slate-400">${mission.desc}</p>
+                            <span class="text-[10px] text-cyan-400 font-bold">Reward: +${mission.rewardStones} Stones, +${mission.rewardContr} Contribution</span>
+                        </div>
+                        <button onclick="doSectMission(${mission.rewardStones}, ${mission.rewardContr}, '${mission.name}')" class="px-3 py-1.5 bg-cyan-700 hover:bg-cyan-600 text-white font-bold rounded text-xs transition">
+                            Dispatch
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function doSectMission(stones, contr, name) {
+            gameState.spiritualStones += stones;
+            gameState.sectContribution += contr;
+            if (gameState.sectContribution >= 50 && gameState.sectRank === 'Outer Disciple') {
+                gameState.sectRank = 'Inner Disciple';
+                addLog('Promoted to Inner Disciple in your Sect!', 'cultivation');
+                showToast('Promoted to Inner Disciple!', 'success');
+            } else if (gameState.sectContribution >= 150 && gameState.sectRank === 'Inner Disciple') {
+                gameState.sectRank = 'Core Disciple';
+                addLog('Promoted to Core Disciple in your Sect!', 'cultivation');
+                showToast('Promoted to Core Disciple!', 'success');
+            }
+            addLog(`Completed sect mission "${name}". Earned +${stones} Stones & +${contr} Contribution.`, 'cultivation');
+            showToast(`Mission Completed!`, 'success');
+            renderSectMissions();
+            updateUI();
+        }
+
+        function renderPets() {
+            const list = document.getElementById('pets-list');
+            list.innerHTML = '';
+            gameState.pets.forEach(pet => {
+                let isActive = gameState.activePet === pet.id;
+                list.innerHTML += `
+                    <div class="p-3 rounded-lg border flex justify-between items-center ${isActive ? 'bg-purple-950/40 border-purple-600' : 'bg-slate-900/80 border-slate-800'}">
+                        <div>
+                            <h4 class="font-cinzel font-bold text-xs text-purple-300">${pet.name}</h4>
+                            <p class="text-[10px] text-slate-400">${pet.bonus}</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            ${pet.unlocked ? `
+                                <button onclick="togglePet('${pet.id}')" class="px-3 py-1.5 ${isActive ? 'bg-purple-700 text-white' : 'bg-slate-800 text-slate-300'} font-bold rounded text-xs transition">
+                                    ${isActive ? 'Summoned' : 'Summon'}
+                                </button>
+                            ` : `
+                                <button onclick="unlockPet('${pet.id}')" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-slate-950 font-bold rounded text-xs transition">
+                                    Unlock (${pet.cost} Stones)
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function unlockPet(id) {
+            let pet = gameState.pets.find(p => p.id === id);
+            if (!pet || pet.unlocked) return;
+            if (gameState.spiritualStones >= pet.cost) {
+                gameState.spiritualStones -= pet.cost;
+                pet.unlocked = true;
+                gameState.activePet = pet.id;
+                addLog(`You successfully summoned and bonded with ${pet.name}!`, 'cultivation');
+                showToast(`Bonded with ${pet.name}!`, 'success');
+                renderPets();
+                updateUI();
+            } else {
+                showToast('Not enough Spiritual Stones!', 'error');
+            }
+        }
+
+        function togglePet(id) {
+            if (gameState.activePet === id) {
+                gameState.activePet = null;
+                addLog('Pet returned to spiritual realm.', 'cultivation');
+            } else {
+                gameState.activePet = id;
+                addLog('Summoned pet to your side.', 'cultivation');
+            }
+            renderPets();
+        }
+
+        function renderAchievements() {
+            const list = document.getElementById('achievements-list');
+            list.innerHTML = '';
+            gameState.achievements.forEach(ach => {
+                list.innerHTML += `
+                    <div class="p-3 rounded-lg border ${ach.completed ? 'bg-amber-950/30 border-amber-600/50' : 'bg-slate-900/80 border-slate-800'} flex justify-between items-center">
+                        <div>
+                            <h4 class="font-cinzel font-bold text-xs ${ach.completed ? 'text-amber-400' : 'text-slate-300'}">${ach.name} ${ach.completed ? '✓' : ''}</h4>
+                            <p class="text-[10px] text-slate-400">${ach.desc}</p>
+                            <span class="text-[10px] text-cyan-400">Reward: ${ach.reward}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function updateUI() {
+            document.getElementById('header-age').innerText = `${gameState.ageYears}y ${gameState.ageDays}d`;
+            document.getElementById('header-expectancy').innerText = `Exp: ${gameState.maxAge}y`;
+            document.getElementById('header-taels').innerText = gameState.taels;
+            document.getElementById('header-stones').innerText = gameState.spiritualStones;
+            document.getElementById('header-reincarnations').innerText = gameState.reincarnations;
+
+            document.getElementById('stat-health-val').innerText = `${gameState.health} / ${gameState.maxHealth}`;
+            document.getElementById('bar-health').style.width = `${(gameState.health / gameState.maxHealth) * 100}%`;
+            
+            document.getElementById('stat-stamina-val').innerText = `${gameState.stamina} / ${gameState.maxStamina}`;
+            document.getElementById('bar-stamina').style.width = `${(gameState.stamina / gameState.maxStamina) * 100}%`;
+
+            document.getElementById('stat-mana-val').innerText = `${gameState.mana} / ${gameState.maxMana}`;
+            document.getElementById('bar-mana').style.width = `${(gameState.mana / gameState.maxMana) * 100}%`;
+
+            document.getElementById('stat-nutrition-val').innerText = `${gameState.nutrition} / ${gameState.maxNutrition}`;
+            document.getElementById('bar-nutrition').style.width = `${(gameState.nutrition / gameState.maxNutrition) * 100}%`;
+
+            if (gameState.combat.active) {
+                document.getElementById('monster-hp-val').innerText = `${gameState.combat.hp} / ${gameState.combat.maxHp}`;
+                document.getElementById('monster-bar-hp').style.width = `${Math.max(0, (gameState.combat.hp / gameState.combat.maxHp) * 100)}%`;
+            }
+
+            renderAttributes();
+        }
+
+        function setGameSpeed(speed) {
+            gameState.gameSpeed = speed;
+            [1, 2, 5].forEach(s => {
+                let btn = document.getElementById(`speed-${s}`);
+                if (s === speed) {
+                    btn.className = 'px-2 py-0.5 text-[10px] rounded bg-amber-600 text-slate-950 font-bold transition';
+                } else {
+                    btn.className = 'px-2 py-0.5 text-[10px] rounded text-slate-300 hover:text-white transition';
+                }
+            });
+        }
+
+        function openModal(modalId) {
+            if (modalId === 'breakthrough-modal') {
+                openBreakthroughModal();
+                return;
+            }
+            document.getElementById(modalId).classList.remove('hidden');
+            if (modalId === 'store-modal') renderStore();
+            if (modalId === 'alchemy-modal') renderAlchemy();
+            if (modalId === 'sect-modal') renderSects();
+            if (modalId === 'pets-modal') renderPets();
+            if (modalId === 'achievements-modal') renderAchievements();
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function saveGame() {
+            localStorage.setItem('yuga_idle_save_v1.5', JSON.stringify(gameState));
+            showToast('Game saved successfully', 'success');
+            playTone(700, 'sine', 0.2);
+        }
+
+        function loadGame() {
+            let saved = localStorage.getItem('yuga_idle_save_v1.5');
+            if (saved) {
+                try {
+                    let loadedState = JSON.parse(saved);
+                    gameState = { ...gameState, ...loadedState };
+                    updateYugaCycle();
+                } catch(e) {
+                    console.error('Failed to load save data', e);
+                }
+            }
+        }
+
+        function exportSave() {
+            let data = btoa(JSON.stringify(gameState));
+            navigator.clipboard.writeText(data);
+            showToast('Save data copied to clipboard!', 'success');
+        }
+
+        function importSave() {
+            let data = prompt('Paste your exported save data string:');
+            if (data) {
+                try {
+                    let decoded = JSON.parse(atob(data));
+                    gameState = decoded;
+                    saveGame();
+                    location.reload();
+                } catch(e) {
+                    showToast('Invalid save data string!', 'error');
+                }
+            }
+        }
+
+        function hardReset() {
+            if (confirm('Are you sure you want to reset all progress?')) {
+                localStorage.removeItem('yuga_idle_save_v1.5');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
