@@ -8,78 +8,6 @@ const realms = [
   { name: 'Trimurti Immortal', reqAttr: 700, lifeExp: 99999 },
 ];
 
-// ===== NEW: LOCATIONS SYSTEM =====
-const locations = [
-  {
-    id: 'temple',
-    name: '🏯 Sacred Temple',
-    desc: 'A place of spiritual tranquility and meditation.',
-    activities: ['resting', 'meditation', 'sutra_study', 'ritual_offerings', 'stargazing'],
-  },
-  {
-    id: 'wilderness',
-    name: '🌲 Mystical Wilderness',
-    desc: 'Untamed lands filled with spiritual beasts and herbs.',
-    activities: ['martial_training', 'herb_gathering'],
-  },
-  {
-    id: 'pavilion',
-    name: '🏪 Spiritual Pavilion',
-    desc: 'Marketplace of divine artifacts and ancient texts.',
-    activities: ['odd_jobs'],
-  },
-  {
-    id: 'sect_hall',
-    name: '⛩️ Sect Assembly Hall',
-    desc: 'Headquarters of your chosen immortal sect.',
-    activities: ['resting'],
-  },
-];
-
-// ===== NEW: SKILL TREES SYSTEM =====
-const skillTreesData = {
-  cultivation: {
-    name: 'Cultivation Mastery',
-    icon: 'fa-meditation',
-    desc: 'Master the art of spiritual cultivation',
-    skills: [
-      { level: 1, name: 'Inner Breathing', bonus: '+5% Mana Regeneration' },
-      { level: 5, name: 'Spirit Absorption', bonus: '+10% All Attribute XP' },
-      { level: 10, name: 'Celestial Harmony', bonus: '+15% Mana & Intelligence Gain' },
-    ],
-  },
-  combat: {
-    name: 'Combat Mastery',
-    icon: 'fa-sword',
-    desc: 'Perfect your martial technique',
-    skills: [
-      { level: 1, name: 'Basic Strikes', bonus: '+5% Weapon Damage' },
-      { level: 5, name: 'Whirlwind Attack', bonus: '+2 Monster Encounters/Tick' },
-      { level: 10, name: 'Divine Sword Art', bonus: '+25% Combat Damage' },
-    ],
-  },
-  alchemy: {
-    name: 'Alchemical Arts',
-    icon: 'fa-flask',
-    desc: 'Refine powerful pills and elixirs',
-    skills: [
-      { level: 1, name: 'Herbalist Knowledge', bonus: '+5% Herb Gathering' },
-      { level: 5, name: 'Pill Refinement', bonus: '-1 Stone Cost (Recipes)' },
-      { level: 10, name: 'Immortal Elixirs', bonus: '+50% Pill Effects' },
-    ],
-  },
-  fortitude: {
-    name: 'Fortitude Training',
-    icon: 'fa-shield',
-    desc: 'Strengthen body and resolve',
-    skills: [
-      { level: 1, name: 'Iron Skin', bonus: '+5% Max Health' },
-      { level: 5, name: 'Unbreakable Will', bonus: '+10% Defense' },
-      { level: 10, name: 'Eternal Durability', bonus: '+20% Max HP & Defense' },
-    ],
-  },
-};
-
 const gameState = {
   version: '1.6.0',
   realmIndex: 0,
@@ -104,11 +32,7 @@ const gameState = {
   gameSpeed: 1,
   currentActivity: 'resting',
   currentLocation: 'temple',
-  // ===== NEW: SKILL SYSTEM =====
-  skills: Object.keys(skillTreesData).reduce((acc, key) => {
-    acc[key] = { level: 1, xp: 0, maxXp: 100 };
-    return acc;
-  }, {}),
+  rates: { taels: 0, stones: 0, health: 0, stamina: 0, mana: 0, nutrition: 0 },
   stats: {
     totalTimePlayed: 0,
     monstersDefeated: 0,
@@ -149,28 +73,20 @@ const gameState = {
     mantra_chanting: { name: 'Sacred Mantra Chanting', desc: 'Chant Vedic mantras to elevate Charisma and spiritual aura.', icon: 'fa-om', staminaCost: 15, chaGain: 4, unlocked: false },
   },
   inventory: [
-    { id: 1, name: 'Rice Sack', type: 'food', desc: 'A modest sack of nourishing white rice.', count: 3, icon: 'fa-bowl-rice' },
-    { id: 2, name: 'Iron Sword', type: 'weapon', desc: 'A sturdy iron blade (+5 Attack).', count: 1, icon: 'fa-sword', slot: 'weapon', atk: 5 },
-    { id: 3, name: 'Ginseng Herb', type: 'herb', desc: 'Spiritual herb used in pill alchemy.', count: 2, icon: 'fa-leaf' },
+    { id: 1, name: 'Rice Sack', type: 'food', desc: 'A modest sack of nourishing white rice.', count: 3, icon: 'fa-bowl-rice', rarity: 'common' },
+    { id: 2, name: 'Iron Sword', type: 'weapon', desc: 'A sturdy iron blade (+5 Attack).', count: 1, icon: 'fa-sword', slot: 'weapon', atk: 5, rarity: 'rare' },
+    { id: 3, name: 'Ginseng Herb', type: 'herb', desc: 'Spiritual herb used in pill alchemy.', count: 2, icon: 'fa-leaf', rarity: 'common' },
   ],
-  combat: {
-    active: false,
-    isBoss: false,
-    monsterName: '',
-    hp: 50,
-    maxHp: 50,
-    attack: 5,
-    defense: 2,
-  },
+  combat: { active: false, isBoss: false, monsterName: '', hp: 50, maxHp: 50, attack: 5, defense: 2 },
   logFilter: 'all',
   log: [{ text: 'Your journey to immortality begins as a humble youth leaves home to experience the world.', type: 'cultivation', time: '18y 0d' }],
 };
 
 const storeItems = [
-  { id: 'pill_longevity', name: 'Longevity Pill', cost: 400, desc: 'Increases maximum lifespan by +10 years.', icon: 'fa-pills' },
-  { id: 'sack_rice', name: 'Bag of Rice (x5)', cost: 100, desc: 'Restocks your nutrition reserves.', icon: 'fa-bowl-rice' },
-  { id: 'sword_steel', name: 'Master Steel Sword', cost: 750, desc: 'Celestial steel weapon (+12 ATK).', icon: 'fa-khanda' },
-  { id: 'jade_armor', name: 'Dragon Jade Robe', cost: 900, desc: 'Protective immortal robe (+8 Defense).', icon: 'fa-shield-halved' },
+  { id: 'pill_longevity', name: 'Longevity Pill', cost: 400, desc: 'Increases maximum lifespan by +10 years.', icon: 'fa-pills', rarity: 'rare' },
+  { id: 'sack_rice', name: 'Bag of Rice (x5)', cost: 100, desc: 'Restocks your nutrition reserves.', icon: 'fa-bowl-rice', rarity: 'common' },
+  { id: 'sword_steel', name: 'Master Steel Sword', cost: 750, desc: 'Celestial steel weapon (+12 ATK).', icon: 'fa-khanda', rarity: 'epic' },
+  { id: 'jade_armor', name: 'Dragon Jade Robe', cost: 900, desc: 'Protective immortal robe (+8 Defense).', icon: 'fa-shield-halved', rarity: 'divine' },
 ];
 
 const alchemyRecipes = [
@@ -203,6 +119,7 @@ function init() {
   renderSect();
   renderLog();
   updateHeader();
+  updateNotifications();
   setInterval(gameTick, 1000);
 }
 
@@ -220,6 +137,61 @@ function setGameSpeed(multiplier) {
       el.classList.add('text-slate-300', 'hover:text-white');
     }
   });
+}
+
+function componentRateText(value, suffix = 's') {
+  const v = Math.abs(value);
+  if (value > 0) return `+${v.toFixed(1)}/${suffix}`;
+  if (value < 0) return `-${v.toFixed(1)}/${suffix}`;
+  return `+0/${suffix}`;
+}
+
+function setVitalRates() {
+  const activity = gameState.activities[gameState.currentActivity];
+  const speed = gameState.gameSpeed || 1;
+  const rates = { taels: 0, stones: 0, health: 0, stamina: 0, mana: 0, nutrition: -1 * speed };
+
+  if (activity) {
+    if (activity.healthGain) rates.health = activity.healthGain * speed;
+    if (activity.taelsGain) rates.taels = activity.taelsGain * speed;
+    if (activity.manaGain) rates.mana = activity.manaGain * speed;
+    if (activity.staminaCost) rates.stamina = activity.staminaCost * speed;
+  }
+
+  if (gameState.currentActivity === 'herb_gathering') rates.stones = 0.5 * speed;
+  if (gameState.currentActivity === 'odd_jobs') rates.taels = (gameState.activities.odd_jobs.taelsGain || 5) * speed;
+  if (gameState.currentActivity === 'meditation') rates.mana = (gameState.activities.meditation.manaGain || 5) * speed;
+  if (gameState.currentActivity === 'resting') rates.health = (gameState.activities.resting.healthGain || 2) * speed;
+  if (gameState.currentActivity === 'martial_training') rates.stamina = (gameState.activities.martial_training.staminaCost || 12) * speed;
+
+  gameState.rates = rates;
+}
+
+function switchTab(tabName) {
+  const navTabs = ['nav-cultivation', 'nav-combat', 'nav-commerce', 'nav-inventory', 'nav-chronicle'];
+  navTabs.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.toggle('active-tab', id === `nav-${tabName}`);
+  });
+
+  const sections = ['pane-cultivation', 'pane-activities', 'pane-combat', 'pane-inventory', 'pane-log'];
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const shouldShow =
+      (tabName === 'cultivation' && (id === 'pane-cultivation' || id === 'pane-activities')) ||
+      (tabName === 'combat' && (id === 'pane-combat' || id === 'pane-activities')) ||
+      (tabName === 'inventory' && id === 'pane-inventory') ||
+      (tabName === 'chronicle' && id === 'pane-log');
+
+    el.classList.toggle('hidden', !shouldShow);
+    el.classList.toggle('flex', shouldShow);
+  });
+
+  if (tabName === 'commerce') {
+    openModal('store-modal');
+  }
 }
 
 function switchMobileTab(tabName) {
@@ -241,6 +213,13 @@ function switchMobileTab(tabName) {
   });
 }
 
+function updateNotifications() {
+  const sectBadge = document.getElementById('sect-badge');
+  const achievementBadge = document.getElementById('achievements-badge');
+  if (sectBadge) sectBadge.classList.toggle('hidden', gameState.sect === 'None');
+  if (achievementBadge) achievementBadge.classList.toggle('hidden', !gameState.achievements.some(a => !a.completed));
+}
+
 function openModal(id) {
   const el = document.getElementById(id);
   if (el) el.classList.remove('hidden');
@@ -253,22 +232,27 @@ function closeModal(id) {
 
 function renderAttributes() {
   const container = document.getElementById('attributes-container');
-  if (!container) return;
-  container.innerHTML = Object.entries(gameState.attributes).map(([key, attr]) => `
-    <div class="bg-slate-900/60 rounded-lg p-2 border border-slate-800">
-      <div class="flex justify-between items-center mb-1">
-        <div class="flex items-center space-x-2 text-slate-200 text-[11px] font-medium">
-          <i class="fa-solid ${attr.icon} text-amber-400"></i>
-          <span>${attr.name}</span>
+  const mobile = document.getElementById('attributes-container-mobile');
+  const render = (target) => {
+    if (!target) return;
+    target.innerHTML = Object.entries(gameState.attributes).map(([key, attr]) => `
+      <div class="bg-slate-900/60 rounded-lg p-2 border border-slate-800">
+        <div class="flex justify-between items-center mb-1">
+          <div class="flex items-center space-x-2 text-slate-200 text-[11px] font-medium">
+            <i class="fa-solid ${attr.icon} text-amber-400"></i>
+            <span>${attr.name}</span>
+          </div>
+          <span class="text-[10px] text-amber-300 font-bold">Lv ${attr.value}</span>
         </div>
-        <span class="text-[10px] text-amber-300 font-bold">Lv ${attr.value}</span>
+        <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden border border-slate-800">
+          <div class="bg-gradient-to-r from-amber-500 to-yellow-300 h-full" style="width:${Math.min((attr.xp / attr.maxXp) * 100, 100)}%"></div>
+        </div>
+        <div class="mt-1 text-[10px] text-slate-400 flex justify-between"><span>XP</span><span>${Math.round(attr.xp)}/${attr.maxXp}</span></div>
       </div>
-      <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden border border-slate-800">
-        <div class="bg-gradient-to-r from-amber-500 to-yellow-300 h-full" style="width:${Math.min((attr.xp / attr.maxXp) * 100, 100)}%"></div>
-      </div>
-      <div class="mt-1 text-[10px] text-slate-400 flex justify-between"><span>XP</span><span>${Math.round(attr.xp)}/${attr.maxXp}</span></div>
-    </div>
-  `).join('');
+    `).join('');
+  };
+  render(container);
+  render(mobile);
 }
 
 function renderActivities() {
@@ -308,7 +292,8 @@ function renderInventory() {
   container.innerHTML = Array.from({ length: 20 }, (_, index) => {
     const item = items[index];
     if (!item) return '<div class="bg-slate-950/80 border border-slate-800 rounded-md min-h-[36px]"></div>';
-    return `<div class="bg-slate-950/80 border border-slate-800 rounded-md min-h-[36px] p-1 flex flex-col items-center justify-center text-[9px] text-slate-200 hover:border-amber-500/60" title="${item.name}"><i class="fa-solid ${item.icon}"></i></div>`;
+    const rarityClass = `rarity-${item.rarity || 'common'}`;
+    return `<div class="bg-slate-950/80 border rounded-md min-h-[36px] p-1 flex flex-col items-center justify-center text-[9px] text-slate-200 hover:border-amber-500/60 ${rarityClass}" title="${item.name}\n${item.desc}"><i class="fa-solid ${item.icon}"></i></div>`;
   }).join('');
   if (countEl) countEl.textContent = String(items.length);
 }
@@ -331,7 +316,7 @@ function renderStore() {
   const target = document.getElementById('store-items-list');
   if (!target) return;
   target.innerHTML = storeItems.map((item) => `
-    <div class="bg-slate-900/80 border border-slate-800 rounded-lg p-3">
+    <div class="bg-slate-900/80 border rounded-lg p-3 ${item.rarity ? `rarity-${item.rarity}` : 'rarity-common'}">
       <div class="flex justify-between items-center">
         <div class="flex items-center space-x-2">
           <div class="w-8 h-8 rounded-md bg-slate-800 flex items-center justify-center"><i class="fa-solid ${item.icon} text-amber-300"></i></div>
@@ -436,7 +421,13 @@ function addLog(text, type = 'cultivation') {
 }
 
 function updateHeader() {
+  setVitalRates();
   const realm = realms[gameState.realmIndex];
+  const healthPct = (gameState.health / gameState.maxHealth) * 100;
+  const staminaPct = (gameState.stamina / gameState.maxStamina) * 100;
+  const manaPct = (gameState.mana / gameState.maxMana) * 100;
+  const nutritionPct = (gameState.nutrition / gameState.maxNutrition) * 100;
+
   document.getElementById('header-realm').textContent = realm.name;
   document.getElementById('header-yuga').textContent = gameState.yuga;
   document.getElementById('header-age').textContent = `${gameState.ageYears}y ${gameState.ageDays}d`;
@@ -444,47 +435,53 @@ function updateHeader() {
   document.getElementById('header-taels').textContent = gameState.taels;
   document.getElementById('header-stones').textContent = gameState.spiritualStones;
   document.getElementById('header-reincarnations').textContent = gameState.reincarnations;
-  document.getElementById('stat-health-val').textContent = `${Math.round(gameState.health)} / ${gameState.maxHealth}`;
-  document.getElementById('bar-health').style.width = `${(gameState.health / gameState.maxHealth) * 100}%`;
-  document.getElementById('stat-stamina-val').textContent = `${Math.round(gameState.stamina)} / ${gameState.maxStamina}`;
-  document.getElementById('bar-stamina').style.width = `${(gameState.stamina / gameState.maxStamina) * 100}%`;
-  document.getElementById('stat-mana-val').textContent = `${Math.round(gameState.mana)} / ${gameState.maxMana}`;
-  document.getElementById('bar-mana').style.width = `${(gameState.mana / gameState.maxMana) * 100}%`;
-  document.getElementById('stat-nutrition-val').textContent = `${Math.round(gameState.nutrition)} / ${gameState.maxNutrition}`;
-  document.getElementById('bar-nutrition').style.width = `${(gameState.nutrition / gameState.maxNutrition) * 100}%`;
-}
+  document.getElementById('header-taels-rate').textContent = componentRateText(gameState.rates.taels);
+  document.getElementById('header-stones-rate').textContent = componentRateText(gameState.rates.stones);
 
-// ===== NEW: SKILL XP SYSTEM =====
-function applySkillBonuses(activityKey) {
-  let bonusMultiplier = 1.0;
-  const skillMapping = {
-    cultivation: ['meditation', 'sutra_study', 'stargazing'],
-    combat: ['martial_training'],
-    alchemy: ['herb_gathering'],
-    fortitude: ['resting'],
-  };
+  const healthText = document.getElementById('stat-health-val');
+  const staminaText = document.getElementById('stat-stamina-val');
+  const manaText = document.getElementById('stat-mana-val');
+  const nutritionText = document.getElementById('stat-nutrition-val');
+  if (healthText) healthText.textContent = `${Math.round(gameState.health)} / ${gameState.maxHealth}`;
+  if (staminaText) staminaText.textContent = `${Math.round(gameState.stamina)} / ${gameState.maxStamina}`;
+  if (manaText) manaText.textContent = `${Math.round(gameState.mana)} / ${gameState.maxMana}`;
+  if (nutritionText) nutritionText.textContent = `${Math.round(gameState.nutrition)} / ${gameState.maxNutrition}`;
 
-  for (const [skill, activities] of Object.entries(skillMapping)) {
-    if (activities.includes(activityKey)) {
-      const skillBonus = gameState.skills[skill].level * 0.05;
-      bonusMultiplier += skillBonus;
-    }
-  }
-  return bonusMultiplier;
-}
+  const barHealth = document.getElementById('bar-health');
+  const barStamina = document.getElementById('bar-stamina');
+  const barMana = document.getElementById('bar-mana');
+  const barNutrition = document.getElementById('bar-nutrition');
+  if (barHealth) barHealth.style.width = `${Math.max(0, Math.min(100, healthPct))}%`;
+  if (barStamina) barStamina.style.width = `${Math.max(0, Math.min(100, staminaPct))}%`;
+  if (barMana) barMana.style.width = `${Math.max(0, Math.min(100, manaPct))}%`;
+  if (barNutrition) barNutrition.style.width = `${Math.max(0, Math.min(100, nutritionPct))}%`;
 
-function gainSkillXP(skillKey, amount) {
-  const skill = gameState.skills[skillKey];
-  if (!skill) return;
+  const mobileH = document.getElementById('bar-health-mobile');
+  const mobileS = document.getElementById('bar-stamina-mobile');
+  const mobileM = document.getElementById('bar-mana-mobile');
+  const mobileN = document.getElementById('bar-nutrition-mobile');
+  if (mobileH) mobileH.style.width = `${Math.max(0, Math.min(100, healthPct))}%`;
+  if (mobileS) mobileS.style.width = `${Math.max(0, Math.min(100, staminaPct))}%`;
+  if (mobileM) mobileM.style.width = `${Math.max(0, Math.min(100, manaPct))}%`;
+  if (mobileN) mobileN.style.width = `${Math.max(0, Math.min(100, nutritionPct))}%`;
 
-  skill.xp += amount;
-  if (skill.xp >= skill.maxXp) {
-    skill.xp = 0;
-    skill.level += 1;
-    skill.maxXp = Math.floor(skill.maxXp * 1.3);
-    addLog(`Your ${Object.keys(skillTreesData)[Object.keys(gameState.skills).indexOf(skillKey)]} skill has reached Level ${skill.level}!`, 'cultivation');
-    showToast(`Skill Level Up!`, 'success');
-  }
+  const rateHealth = document.getElementById('health-rate');
+  const rateStamina = document.getElementById('stamina-rate');
+  const rateMana = document.getElementById('mana-rate');
+  const rateNutrition = document.getElementById('nutrition-rate');
+  if (rateHealth) rateHealth.textContent = componentRateText(gameState.rates.health);
+  if (rateStamina) rateStamina.textContent = componentRateText(gameState.rates.stamina);
+  if (rateMana) rateMana.textContent = componentRateText(gameState.rates.mana);
+  if (rateNutrition) rateNutrition.textContent = componentRateText(gameState.rates.nutrition);
+
+  const mobileHealthVal = document.getElementById('stat-health-val-mobile');
+  const mobileStaminaVal = document.getElementById('stat-stamina-val-mobile');
+  const mobileManaVal = document.getElementById('stat-mana-val-mobile');
+  const mobileNutritionVal = document.getElementById('stat-nutrition-val-mobile');
+  if (mobileHealthVal) mobileHealthVal.textContent = `${Math.round(gameState.health)}/${gameState.maxHealth}`;
+  if (mobileStaminaVal) mobileStaminaVal.textContent = `${Math.round(gameState.stamina)}/${gameState.maxStamina}`;
+  if (mobileManaVal) mobileManaVal.textContent = `${Math.round(gameState.mana)}/${gameState.maxMana}`;
+  if (mobileNutritionVal) mobileNutritionVal.textContent = `${Math.round(gameState.nutrition)}/${gameState.maxNutrition}`;
 }
 
 function gameTick() {
@@ -511,26 +508,18 @@ function gameTick() {
   const activity = gameState.activities[gameState.currentActivity];
   if (activity && activity.unlocked) {
     const bonus = gameState.sect === 'Brahma Wisdom Sect' && (gameState.currentActivity === 'sutra_study' || gameState.currentActivity === 'stargazing') ? 1.25 : 1;
-    const skillBonus = applySkillBonuses(gameState.currentActivity);
-    const totalBonus = bonus * skillBonus;
-
     if (gameState.currentActivity === 'resting') {
       gameState.health = Math.min(gameState.maxHealth, gameState.health + (activity.healthGain || 2));
-      gainSkillXP('fortitude', 0.5 * totalBonus);
     } else if (gameState.currentActivity === 'odd_jobs') {
-      const gain = (activity.taelsGain || 5) * totalBonus;
+      const gain = (activity.taelsGain || 5) * bonus;
       gameState.taels += gain;
-      gainAttributeXP('strength', 0.5 * totalBonus);
+      gainAttributeXP('strength', 0.5 * bonus);
     } else if (gameState.currentActivity === 'meditation') {
       gameState.mana = Math.min(gameState.maxMana, gameState.mana + (activity.manaGain || 5));
-      gainAttributeXP('intelligence', (activity.intGain || 1) * totalBonus);
-      gainSkillXP('cultivation', 1 * totalBonus);
+      gainAttributeXP('intelligence', (activity.intGain || 1) * bonus);
     } else if (gameState.currentActivity === 'martial_training') {
-      gainAttributeXP('strength', (activity.strGain || 1) * totalBonus);
-      gainAttributeXP('speed', (activity.spdGain || 1) * totalBonus);
-      gainSkillXP('combat', 1 * totalBonus);
-    } else if (gameState.currentActivity === 'herb_gathering') {
-      gainSkillXP('alchemy', 1 * totalBonus);
+      gainAttributeXP('strength', (activity.strGain || 1) * bonus);
+      gainAttributeXP('speed', (activity.spdGain || 1) * bonus);
     }
   }
 
@@ -545,6 +534,7 @@ function gameTick() {
   renderInventory();
   renderEquipment();
   renderAchievements();
+  updateNotifications();
 }
 
 function processCombatTick() {
@@ -713,7 +703,7 @@ function addInventoryItem(name, count, type, desc, slot = null, atk = 0, def = 0
   if (existing) {
     existing.count += count;
   } else {
-    gameState.inventory.push({ id: Date.now(), name, type, desc, count, icon: type === 'weapon' ? 'fa-sword' : type === 'armor' ? 'fa-shield-halved' : 'fa-leaf', slot, atk, def });
+    gameState.inventory.push({ id: Date.now(), name, type, desc, count, icon: type === 'weapon' ? 'fa-sword' : type === 'armor' ? 'fa-shield-halved' : 'fa-leaf', slot, atk, def, rarity: type === 'weapon' ? 'rare' : type === 'armor' ? 'epic' : 'common' });
   }
   renderInventory();
 }
@@ -725,6 +715,7 @@ function joinSect(sectId) {
   if (sectId === 'none') gameState.sectRank = 'Independent';
   else gameState.sectRank = 'Outer Disciple';
   addLog(`You aligned with the ${sect.name}.`, 'cultivation');
+  updateNotifications();
 }
 
 function acceptMission(missionId) {
@@ -806,7 +797,7 @@ function fleeCombat() {
   document.getElementById('combat-panel').classList.add('hidden');
   document.getElementById('combat-idle-msg').classList.remove('hidden');
   document.getElementById('combat-toggle-btn').textContent = 'Look for Trouble';
-  document.getElementById('combat-toggle-btn').className = 'px-2.5 py-1 bg-red-700 hover:bg-red-600 text-white font-bold text-xs rounded transition shadow';
+  document.getElementById('combat-toggle-btn').className = 'px-2.5 py-1 bg-red-700 hover:bg-red-600 text-white font-bold text-xs rounded transition shadow action-ready';
   document.getElementById('combat-sublog').innerHTML = '<div>Engaging in battle...</div>';
 }
 
@@ -860,6 +851,7 @@ function renderAll() {
   renderSect();
   renderLog();
   updateHeader();
+  updateNotifications();
 }
 
 window.onload = () => {
@@ -869,11 +861,11 @@ window.onload = () => {
 setGameSpeed(1);
 setLogFilter('all');
 
-// Optional compatibility shims for the original interface names
 window.openModal = openModal;
 window.closeModal = closeModal;
 window.setGameSpeed = setGameSpeed;
 window.switchMobileTab = switchMobileTab;
+window.switchTab = switchTab;
 window.triggerBossRaid = triggerBossRaid;
 window.toggleCombat = toggleCombat;
 window.triggerSpecialAttack = triggerSpecialAttack;
@@ -902,14 +894,29 @@ window.switchSectTab = (tab) => {
   }
 };
 
+document.addEventListener('keydown', (event) => {
+  const targetTag = event.target && event.target.tagName;
+  if (targetTag === 'INPUT' || targetTag === 'TEXTAREA' || targetTag === 'SELECT') return;
+
+  if (event.code === 'Space') {
+    event.preventDefault();
+    if (gameState.combat.active) fleeCombat();
+    else startCombat(false);
+    return;
+  }
+
+  if (event.key === '1') switchTab('cultivation');
+  if (event.key === '2') switchTab('combat');
+  if (event.key === '3') openModal('store-modal');
+  if (event.key === '4') switchTab('inventory');
+  if (event.key === '5') openModal('settings-modal');
+  if (event.key === 's' || event.key === 'S') openModal('settings-modal');
+});
+
 renderAll();
 updateHeader();
-
+updateNotifications();
 window.gameState = gameState;
 window.realms = realms;
-window.skillTreesData = skillTreesData;
-window.locations = locations;
-
 showToast('Adventure initialized.', 'system');
-
-console.log('Yuga Idle: Chronicles of the Trimurti v1.6.0 - Enhanced with Skill Trees!');
+console.log('Yuga Idle: Chronicles of the Trimurti initialized.');
