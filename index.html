@@ -40,7 +40,7 @@
   <body class="h-full bg-obsidian-950 text-slate-100 font-inter select-none overflow-hidden flex flex-col">
     <div id="toast-container"></div>
 
-    <header class="bg-slate-900 border-b gold-border px-3 py-2 flex flex-wrap items-center justify-between shadow-lg z-25 shrink-0">
+    <header class="sticky top-0 z-40 bg-slate-900 border-b gold-border px-3 py-2 flex flex-wrap items-center justify-between shadow-lg shrink-0">
       <div class="flex items-center space-x-2.5">
         <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center shadow-md gold-glow">
           <span class="text-slate-950 text-lg font-bold">🔱</span>
@@ -62,11 +62,17 @@
       <div class="flex items-center space-x-1.5 mt-1.5 sm:mt-0">
         <div class="flex items-center space-x-1 bg-slate-950/80 px-2 py-1 rounded-lg border gold-border text-xs" title="Taels">
           <i class="fa-solid fa-coins text-amber-400"></i>
-          <span id="header-taels" class="font-bold text-amber-300">300</span>
+          <div class="flex flex-col items-start">
+            <span id="header-taels" class="font-bold text-amber-300">300</span>
+            <span id="header-taels-rate" class="text-[8px] text-amber-400/70">+0/s</span>
+          </div>
         </div>
         <div class="flex items-center space-x-1 bg-slate-950/80 px-2 py-1 rounded-lg border gold-border text-xs" title="Spiritual Stones">
           <i class="fa-solid fa-gem text-cyan-400"></i>
-          <span id="header-stones" class="font-bold text-cyan-300">5</span>
+          <div class="flex flex-col items-start">
+            <span id="header-stones" class="font-bold text-cyan-300">5</span>
+            <span id="header-stones-rate" class="text-[8px] text-cyan-400/70">+0/s</span>
+          </div>
         </div>
         <div class="flex items-center space-x-1 bg-slate-950/80 px-2 py-1 rounded-lg border gold-border text-xs" title="Reincarnations">
           <i class="fa-solid fa-dharmachakra text-amber-500"></i>
@@ -83,43 +89,95 @@
           </button>
           <button onclick="openModal('store-modal')" class="px-2 py-1 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded-lg text-xs transition shadow" title="Pavilion"><i class="fa-solid fa-store"></i></button>
           <button onclick="openModal('alchemy-modal')" class="px-2 py-1 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded-lg text-xs transition shadow" title="Alchemy"><i class="fa-solid fa-flask"></i></button>
-          <button onclick="openModal('sect-modal')" class="px-2 py-1 bg-cyan-700 hover:bg-cyan-600 text-white font-bold rounded-lg text-xs transition shadow" title="Sect"><i class="fa-solid fa-mountain-city"></i></button>
+          <button onclick="openModal('sect-modal')" class="px-2 py-1 bg-cyan-700 hover:bg-cyan-600 text-white font-bold rounded-lg text-xs transition shadow relative" title="Sect"><i class="fa-solid fa-mountain-city"></i><span id="sect-badge" class="notification-badge hidden"></span></button>
           <button onclick="openModal('pets-modal')" class="px-2 py-1 bg-purple-700 hover:bg-purple-600 text-white font-bold rounded-lg text-xs transition shadow" title="Pets"><i class="fa-solid fa-paw"></i></button>
-          <button onclick="openModal('achievements-modal')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg text-xs transition border gold-border" title="Achievements"><i class="fa-solid fa-trophy"></i></button>
-          <button onclick="openModal('guide-modal')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg text-xs transition border gold-border" title="Guide"><i class="fa-solid fa-book-open"></i></button>
+          <button onclick="openModal('achievements-modal')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg text-xs transition border gold-border relative" title="Achievements"><i class="fa-solid fa-trophy"></i><span id="achievements-badge" class="notification-badge hidden"></span></button>
+          <button onclick="openModal('guide-modal')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg text-xs transition border gold-border" title="Guide"><i class="fa-solid fa-book"></i></button>
           <button onclick="openModal('settings-modal')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg text-xs transition border gold-border" title="Settings"><i class="fa-solid fa-gear"></i></button>
         </div>
       </div>
     </header>
 
+    <nav class="hidden lg:flex bg-slate-900/80 border-b gold-border justify-start px-3 py-2 z-30 text-xs gap-1 shrink-0 overflow-x-auto">
+      <button onclick="switchTab('cultivation')" id="nav-cultivation" class="nav-tab active-tab px-3 py-1.5 rounded-t-lg font-bold">
+        <i class="fa-solid fa-meditation mr-1"></i>Cultivation
+      </button>
+      <button onclick="switchTab('combat')" id="nav-combat" class="nav-tab px-3 py-1.5 rounded-t-lg font-bold">
+        <i class="fa-solid fa-sword mr-1"></i>Combat
+      </button>
+      <button onclick="switchTab('commerce')" id="nav-commerce" class="nav-tab px-3 py-1.5 rounded-t-lg font-bold">
+        <i class="fa-solid fa-coins mr-1"></i>Commerce
+      </button>
+      <button onclick="switchTab('inventory')" id="nav-inventory" class="nav-tab px-3 py-1.5 rounded-t-lg font-bold">
+        <i class="fa-solid fa-bag-shopping mr-1"></i>Inventory
+      </button>
+      <button onclick="switchTab('chronicle')" id="nav-chronicle" class="nav-tab px-3 py-1.5 rounded-t-lg font-bold">
+        <i class="fa-solid fa-scroll mr-1"></i>Chronicle
+      </button>
+    </nav>
+
     <nav class="flex lg:hidden bg-slate-900 border-b gold-border justify-around p-1.5 z-20 text-xs shrink-0">
-      <button onclick="switchMobileTab('dashboard')" id="tab-btn-dashboard" class="flex-1 py-1 px-2 rounded text-center font-bold text-amber-400 bg-amber-950/40 border border-amber-600/40 flex items-center justify-center space-x-1.5"><i class="fa-solid fa-house-chimney"></i><span>Home</span></button>
-      <button onclick="switchMobileTab('activities')" id="tab-btn-activities" class="flex-1 py-1 px-2 rounded text-center font-medium text-slate-400 hover:text-white flex items-center justify-center space-x-1.5"><i class="fa-solid fa-list-check"></i><span>Sadhana</span></button>
-      <button onclick="switchMobileTab('combat')" id="tab-btn-combat" class="flex-1 py-1 px-2 rounded text-center font-medium text-slate-400 hover:text-white flex items-center justify-center space-x-1.5"><i class="fa-solid fa-skull"></i><span>Combat</span></button>
-      <button onclick="switchMobileTab('inventory')" id="tab-btn-inventory" class="flex-1 py-1 px-2 rounded text-center font-medium text-slate-400 hover:text-white flex items-center justify-center space-x-1.5"><i class="fa-solid fa-bag-shopping"></i><span>Items</span></button>
-      <button onclick="switchMobileTab('log')" id="tab-btn-log" class="flex-1 py-1 px-2 rounded text-center font-medium text-slate-400 hover:text-white flex items-center justify-center space-x-1.5"><i class="fa-solid fa-scroll"></i><span>Log</span></button>
+      <button onclick="switchMobileTab('dashboard')" id="tab-btn-dashboard" class="flex-1 py-1 px-2 rounded text-center font-bold text-amber-400 bg-amber-950/40 border border-amber-600/40 flex items-center justify-center space-x-1.5">
+        <i class="fa-solid fa-home"></i><span class="hidden sm:inline">Home</span>
+      </button>
+      <button onclick="switchMobileTab('activities')" id="tab-btn-activities" class="flex-1 py-1 px-2 rounded text-center font-medium text-slate-400 hover:text-white flex items-center justify-center space-x-1.5">
+        <i class="fa-solid fa-list-check"></i><span class="hidden sm:inline">Tasks</span>
+      </button>
+      <button onclick="switchMobileTab('combat')" id="tab-btn-combat" class="flex-1 py-1 px-2 rounded text-center font-medium text-slate-400 hover:text-white flex items-center justify-center space-x-1.5">
+        <i class="fa-solid fa-skull"></i><span class="hidden sm:inline">Combat</span>
+      </button>
+      <button onclick="switchMobileTab('inventory')" id="tab-btn-inventory" class="flex-1 py-1 px-2 rounded text-center font-medium text-slate-400 hover:text-white flex items-center justify-center space-x-1.5">
+        <i class="fa-solid fa-bag"></i><span class="hidden sm:inline">Inv</span>
+      </button>
+      <button onclick="switchMobileTab('log')" id="tab-btn-log" class="flex-1 py-1 px-2 rounded text-center font-medium text-slate-400 hover:text-white flex items-center justify-center space-x-1.5">
+        <i class="fa-solid fa-scroll"></i><span class="hidden sm:inline">Log</span>
+      </button>
     </nav>
 
     <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 p-3 overflow-hidden">
-      <section id="pane-dashboard" class="col-span-1 lg:col-span-4 flex flex-col space-y-3 overflow-y-auto pr-1">
+      <section id="pane-cultivation" class="col-span-1 lg:col-span-4 flex flex-col space-y-3 overflow-y-auto pr-1">
         <div class="panel-bg border gold-border rounded-xl p-3 shadow-lg gold-glow">
-          <h2 class="font-cinzel font-bold text-amber-400 text-xs sm:text-sm mb-2 flex items-center space-x-2"><i class="fa-solid fa-heart-pulse text-red-500"></i><span>Vital Energies & Sustenance</span></h2>
+          <h2 class="font-cinzel font-bold text-amber-400 text-xs sm:text-sm mb-2 flex items-center space-x-2"><i class="fa-solid fa-heart-pulse text-red-500"></i><span>Vital Energies</span></h2>
           <div class="grid grid-cols-2 sm:grid-cols-1 gap-2">
             <div>
-              <div class="flex justify-between text-[11px] mb-0.5"><span class="text-slate-300 font-medium flex items-center space-x-1"><i class="fa-solid fa-heart text-red-400 w-3"></i><span>Health</span></span><span id="stat-health-val" class="font-bold text-red-300">100 / 100</span></div>
-              <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-red-900/40"><div id="bar-health" class="bg-gradient-to-r from-red-600 to-red-400 h-full transition-all duration-300" style="width: 100%;"></div></div>
+              <div class="flex justify-between text-[11px] mb-0.5">
+                <span class="text-slate-300 font-medium flex items-center space-x-1"><i class="fa-solid fa-heart text-red-400 w-3"></i><span>Health</span></span>
+                <span class="text-[10px] text-red-400 font-bold" id="stat-health-val">100 / 100</span>
+              </div>
+              <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-red-900/40">
+                <div id="bar-health" class="bg-gradient-to-r from-red-600 to-red-400 h-full transition-all duration-100"></div>
+              </div>
+              <div class="text-[9px] text-red-400/70 mt-0.5" id="health-rate">+2.0/s</div>
             </div>
             <div>
-              <div class="flex justify-between text-[11px] mb-0.5"><span class="text-slate-300 font-medium flex items-center space-x-1"><i class="fa-solid fa-bolt text-amber-400 w-3"></i><span>Stamina</span></span><span id="stat-stamina-val" class="font-bold text-amber-300">100 / 100</span></div>
-              <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-amber-900/40"><div id="bar-stamina" class="bg-gradient-to-r from-amber-600 to-amber-400 h-full transition-all duration-300" style="width: 100%;"></div></div>
+              <div class="flex justify-between text-[11px] mb-0.5">
+                <span class="text-slate-300 font-medium flex items-center space-x-1"><i class="fa-solid fa-bolt text-amber-400 w-3"></i><span>Stamina</span></span>
+                <span class="text-[10px] text-amber-400 font-bold" id="stat-stamina-val">100 / 100</span>
+              </div>
+              <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-amber-900/40">
+                <div id="bar-stamina" class="bg-gradient-to-r from-amber-600 to-amber-400 h-full transition-all duration-100"></div>
+              </div>
+              <div class="text-[9px] text-amber-400/70 mt-0.5" id="stamina-rate">-0.5/s</div>
             </div>
             <div>
-              <div class="flex justify-between text-[11px] mb-0.5"><span class="text-slate-300 font-medium flex items-center space-x-1"><i class="fa-solid fa-wand-magic-sparkles text-cyan-400 w-3"></i><span>Mana / Qi</span></span><span id="stat-mana-val" class="font-bold text-cyan-300">100 / 100</span></div>
-              <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-cyan-900/40"><div id="bar-mana" class="bg-gradient-to-r from-cyan-600 to-cyan-400 h-full transition-all duration-300" style="width: 100%;"></div></div>
+              <div class="flex justify-between text-[11px] mb-0.5">
+                <span class="text-slate-300 font-medium flex items-center space-x-1"><i class="fa-solid fa-wand-magic-sparkles text-cyan-400 w-3"></i><span>Mana/Qi</span></span>
+                <span class="text-[10px] text-cyan-400 font-bold" id="stat-mana-val">100 / 100</span>
+              </div>
+              <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-cyan-900/40">
+                <div id="bar-mana" class="bg-gradient-to-r from-cyan-600 to-cyan-400 h-full transition-all duration-100"></div>
+              </div>
+              <div class="text-[9px] text-cyan-400/70 mt-0.5" id="mana-rate">+1.5/s</div>
             </div>
             <div>
-              <div class="flex justify-between text-[11px] mb-0.5"><span class="text-slate-300 font-medium flex items-center space-x-1"><i class="fa-solid fa-bowl-rice text-emerald-400 w-3"></i><span>Nutrition</span></span><span id="stat-nutrition-val" class="font-bold text-emerald-300">100 / 100</span></div>
-              <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-emerald-900/40"><div id="bar-nutrition" class="bg-gradient-to-r from-emerald-600 to-emerald-400 h-full transition-all duration-300" style="width: 100%;"></div></div>
+              <div class="flex justify-between text-[11px] mb-0.5">
+                <span class="text-slate-300 font-medium flex items-center space-x-1"><i class="fa-solid fa-bowl-rice text-emerald-400 w-3"></i><span>Nutrition</span></span>
+                <span class="text-[10px] text-emerald-400 font-bold" id="stat-nutrition-val">100 / 100</span>
+              </div>
+              <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-emerald-900/40">
+                <div id="bar-nutrition" class="bg-gradient-to-r from-emerald-600 to-emerald-400 h-full transition-all duration-100"></div>
+              </div>
+              <div class="text-[9px] text-emerald-400/70 mt-0.5" id="nutrition-rate">-0.3/s</div>
             </div>
           </div>
         </div>
@@ -137,8 +195,8 @@
         <div class="panel-bg border gold-border rounded-xl p-3 shadow-lg">
           <div class="flex justify-between items-center mb-2">
             <div>
-              <h2 class="font-cinzel font-bold text-amber-400 text-xs sm:text-sm flex items-center space-x-2"><i class="fa-solid fa-list-check text-amber-500"></i><span>Sadhana Schedule & Evolution</span></h2>
-              <p class="text-[10px] text-slate-400">Unlock advanced practices as attributes & realms grow</p>
+              <h2 class="font-cinzel font-bold text-amber-400 text-xs sm:text-sm flex items-center space-x-2"><i class="fa-solid fa-list-check text-amber-500"></i><span>Sadhana Schedule</span></h2>
+              <p class="text-[10px] text-slate-400">Unlock advanced practices as attributes grow</p>
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[320px] overflow-y-auto pr-1" id="activities-container"></div>
@@ -146,10 +204,10 @@
 
         <div id="pane-combat" class="panel-bg border gold-border rounded-xl p-3 shadow-lg flex-1 flex flex-col hidden lg:flex">
           <div class="flex justify-between items-center mb-2">
-            <h2 class="font-cinzel font-bold text-amber-400 text-xs sm:text-sm flex items-center space-x-2"><i class="fa-solid fa-skull text-red-500"></i><span>Asura & Monster Battles</span></h2>
+            <h2 class="font-cinzel font-bold text-amber-400 text-xs sm:text-sm flex items-center space-x-2"><i class="fa-solid fa-skull text-red-500"></i><span>Asura Battles</span></h2>
             <div class="flex space-x-1.5">
               <button onclick="triggerBossRaid()" class="px-2.5 py-1 bg-amber-700 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded transition shadow">Boss Raid</button>
-              <button onclick="toggleCombat()" id="combat-toggle-btn" class="px-2.5 py-1 bg-red-700 hover:bg-red-600 text-white font-bold text-xs rounded transition shadow">Look for Trouble</button>
+              <button onclick="toggleCombat()" id="combat-toggle-btn" class="px-2.5 py-1 bg-red-700 hover:bg-red-600 text-white font-bold text-xs rounded transition shadow action-ready">Look for Trouble</button>
             </div>
           </div>
           <div id="combat-panel" class="flex-1 bg-slate-900/80 rounded-lg p-3 border border-slate-800 flex flex-col justify-between hidden">
@@ -164,7 +222,9 @@
             </div>
             <div class="mb-2">
               <div class="flex justify-between text-[11px] mb-0.5"><span class="text-slate-300">Monster HP</span><span id="monster-hp-val" class="font-bold text-red-300">50 / 50</span></div>
-              <div class="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-red-900/40"><div id="monster-bar-hp" class="bg-gradient-to-r from-red-600 to-amber-600 h-full transition-all duration-200" style="width: 100%;"></div></div>
+              <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-red-900/40">
+                <div id="monster-bar-hp" class="bg-gradient-to-r from-red-600 to-amber-600 h-full transition-all duration-100"></div>
+              </div>
             </div>
             <div id="combat-sublog" class="bg-slate-950 rounded p-2 text-[11px] text-slate-300 h-16 overflow-y-auto font-mono mb-2 border border-slate-800 space-y-1"><div>Engaging in battle...</div></div>
             <div class="flex space-x-2">
@@ -174,7 +234,7 @@
           </div>
           <div id="combat-idle-msg" class="flex-1 flex flex-col items-center justify-center text-center p-4 bg-slate-900/40 rounded-lg border border-slate-800/60">
             <i class="fa-solid fa-shield-halved text-slate-600 text-2xl mb-1"></i>
-            <p class="text-[11px] text-slate-400">You are currently at peace. Click "Look for Trouble" or challenge a Boss Raid for divine artifacts and spiritual stones.</p>
+            <p class="text-[11px] text-slate-400">Click "Look for Trouble" to engage enemies.</p>
           </div>
         </div>
       </section>
@@ -187,11 +247,11 @@
           </div>
           <div class="grid grid-cols-4 gap-1.5 mb-2.5" id="equipment-slots"></div>
           <div class="flex justify-between items-center mb-1.5">
-            <h3 class="font-cinzel font-bold text-amber-300 text-xs flex items-center space-x-1"><i class="fa-solid fa-bag-shopping text-amber-500"></i><span>Inventory (<span id="inv-count">0</span>/20)</span></h3>
-            <button onclick="sortInventory()" class="p-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded text-xs border gold-border" title="Sort Inventory"><i class="fa-solid fa-arrow-down-wide-short"></i></button>
+            <h3 class="font-cinzel font-bold text-amber-300 text-xs flex items-center space-x-1"><i class="fa-solid fa-bag-shopping text-amber-500"></i><span>Inventory (<span id="inv-count">0</span>)</span></h3>
+            <button onclick="sortInventory()" class="p-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded text-xs border gold-border" title="Sort Inventory"><i class="fa-solid fa-arrow-down-a-z"></i></button>
           </div>
           <div class="grid grid-cols-5 gap-1.5 bg-slate-900/80 p-2 rounded-lg border border-slate-800 min-h-[100px]" id="inventory-grid"></div>
-          <div id="item-tooltip" class="mt-2 p-2 bg-slate-900 rounded border border-slate-800 text-[11px] text-slate-300 min-h-[35px]"><span class="text-slate-500 italic">Hover or click an item to inspect or equip.</span></div>
+          <div id="item-tooltip" class="mt-2 p-2 bg-slate-900 rounded border border-slate-800 text-[11px] text-slate-300 min-h-[35px]"><span class="text-slate-500 italic">Hover or click an item to see details</span></div>
         </div>
 
         <div id="pane-log" class="panel-bg border gold-border rounded-xl p-3 shadow-lg flex-1 flex flex-col">
@@ -204,6 +264,46 @@
             </div>
           </div>
           <div id="event-log" class="flex-1 bg-slate-950 rounded-lg p-2.5 font-mono text-[11px] text-slate-300 overflow-y-auto space-y-1.5 border border-slate-900 max-h-[180px] lg:max-h-none"></div>
+        </div>
+      </section>
+
+      <section id="pane-dashboard" class="col-span-1 flex-col space-y-3 overflow-y-auto hidden">
+        <div class="panel-bg border gold-border rounded-xl p-3 shadow-lg gold-glow">
+          <h2 class="font-cinzel font-bold text-amber-400 text-xs sm:text-sm mb-2"><i class="fa-solid fa-heart-pulse"></i> Vital Energies</h2>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <div class="text-[10px] mb-1">Health</div>
+              <div class="w-full bg-slate-900 rounded h-1.5 overflow-hidden border border-red-900/40">
+                <div id="bar-health-mobile" class="bg-red-600 h-full transition-all duration-100"></div>
+              </div>
+              <div class="text-[9px] text-red-400 mt-0.5" id="stat-health-val-mobile">100/100</div>
+            </div>
+            <div>
+              <div class="text-[10px] mb-1">Stamina</div>
+              <div class="w-full bg-slate-900 rounded h-1.5 overflow-hidden border border-amber-900/40">
+                <div id="bar-stamina-mobile" class="bg-amber-600 h-full transition-all duration-100"></div>
+              </div>
+              <div class="text-[9px] text-amber-400 mt-0.5" id="stat-stamina-val-mobile">100/100</div>
+            </div>
+            <div>
+              <div class="text-[10px] mb-1">Mana</div>
+              <div class="w-full bg-slate-900 rounded h-1.5 overflow-hidden border border-cyan-900/40">
+                <div id="bar-mana-mobile" class="bg-cyan-600 h-full transition-all duration-100"></div>
+              </div>
+              <div class="text-[9px] text-cyan-400 mt-0.5" id="stat-mana-val-mobile">100/100</div>
+            </div>
+            <div>
+              <div class="text-[10px] mb-1">Nutrition</div>
+              <div class="w-full bg-slate-900 rounded h-1.5 overflow-hidden border border-emerald-900/40">
+                <div id="bar-nutrition-mobile" class="bg-emerald-600 h-full transition-all duration-100"></div>
+              </div>
+              <div class="text-[9px] text-emerald-400 mt-0.5" id="stat-nutrition-val-mobile">100/100</div>
+            </div>
+          </div>
+        </div>
+        <div class="panel-bg border gold-border rounded-xl p-3 shadow-lg flex-1">
+          <h2 class="font-cinzel font-bold text-amber-400 text-xs sm:text-sm mb-2"><i class="fa-solid fa-chart-bar"></i> Attributes</h2>
+          <div class="space-y-2" id="attributes-container-mobile"></div>
         </div>
       </section>
     </main>
@@ -220,7 +320,7 @@
           <div class="flex justify-between"><span>Success Probability:</span> <span id="bt-chance" class="font-bold text-emerald-400">85%</span></div>
           <div class="flex justify-between"><span>Required St. Stones:</span> <span class="font-bold text-amber-300">10</span></div>
         </div>
-        <button onclick="attemptBreakthrough()" class="w-full py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-bold rounded-lg shadow-lg transition">Attempt Breakthrough</button>
+        <button onclick="attemptBreakthrough()" class="w-full py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-bold rounded-lg shadow transition">Attempt Breakthrough</button>
       </div>
     </div>
 
@@ -283,7 +383,7 @@
           <p>• All Attribute Aptitudes permanently increased by <span class="text-amber-300 font-bold">+0.5</span></p>
           <p>• Progression advances towards higher Yuga cycles.</p>
         </div>
-        <button onclick="executeReincarnation()" class="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-bold rounded-lg shadow-lg transition">Begin Next Life</button>
+        <button onclick="executeReincarnation()" class="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-bold rounded-lg shadow transition">Begin New Cycle</button>
       </div>
     </div>
 
@@ -296,6 +396,7 @@
           <p><strong>Artifacts & Equipment:</strong> Equip powerful weapons, armor, talismans, and mounts found in pavilions or boss raids to multiply your combat and attribute power.</p>
           <p><strong>Divine Pets:</strong> Summon mythical companions like the Garuda or Celestial Fox to boost passive Qi gathering and attribute gains.</p>
           <p><strong>Sect Missions:</strong> Join a sect and dispatch yourself on missions to earn contribution points and ascend in rank from Outer Disciple to Elder!</p>
+          <p><strong>Keyboard Shortcuts:</strong> Press <kbd>Space</kbd> for combat, <kbd>1-5</kbd> to switch tabs, <kbd>S</kbd> for settings.</p>
         </div>
       </div>
     </div>
@@ -305,9 +406,9 @@
         <button onclick="closeModal('settings-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
         <h2 class="font-cinzel font-bold text-base text-amber-400 mb-4 flex items-center space-x-2"><i class="fa-solid fa-gear text-amber-500"></i><span>Game Settings</span></h2>
         <div class="space-y-4 text-xs text-slate-300">
-          <div class="flex justify-between items-center"><span>Export Save Data</span><button onclick="exportSave()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded border gold-border font-bold">Export</button></div>
-          <div class="flex justify-between items-center"><span>Import Save Data</span><button onclick="importSave()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded border gold-border font-bold">Import</button></div>
-          <div class="flex justify-between items-center pt-3 border-t border-slate-800"><span class="text-red-400">Hard Reset Progress</span><button onclick="hardReset()" class="px-3 py-1.5 bg-red-950 hover:bg-red-900 text-red-300 rounded border border-red-800 font-bold">Reset</button></div>
+          <div class="flex justify-between items-center"><span>Export Save Data</span><button onclick="exportSave()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded border gold-border">Export</button></div>
+          <div class="flex justify-between items-center"><span>Import Save Data</span><button onclick="importSave()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded border gold-border">Import</button></div>
+          <div class="flex justify-between items-center pt-3 border-t border-slate-800"><span class="text-red-400">Hard Reset Progress</span><button onclick="hardReset()" class="px-3 py-1.5 bg-red-900 hover:bg-red-800 text-red-200 rounded">Reset</button></div>
         </div>
       </div>
     </div>
