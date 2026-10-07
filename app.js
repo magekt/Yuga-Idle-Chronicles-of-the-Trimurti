@@ -8,8 +8,80 @@ const realms = [
   { name: 'Trimurti Immortal', reqAttr: 700, lifeExp: 99999 },
 ];
 
+// ===== NEW: LOCATIONS SYSTEM =====
+const locations = [
+  {
+    id: 'temple',
+    name: '🏯 Sacred Temple',
+    desc: 'A place of spiritual tranquility and meditation.',
+    activities: ['resting', 'meditation', 'sutra_study', 'ritual_offerings', 'stargazing'],
+  },
+  {
+    id: 'wilderness',
+    name: '🌲 Mystical Wilderness',
+    desc: 'Untamed lands filled with spiritual beasts and herbs.',
+    activities: ['martial_training', 'herb_gathering'],
+  },
+  {
+    id: 'pavilion',
+    name: '🏪 Spiritual Pavilion',
+    desc: 'Marketplace of divine artifacts and ancient texts.',
+    activities: ['odd_jobs'],
+  },
+  {
+    id: 'sect_hall',
+    name: '⛩️ Sect Assembly Hall',
+    desc: 'Headquarters of your chosen immortal sect.',
+    activities: ['resting'],
+  },
+];
+
+// ===== NEW: SKILL TREES SYSTEM =====
+const skillTreesData = {
+  cultivation: {
+    name: 'Cultivation Mastery',
+    icon: 'fa-meditation',
+    desc: 'Master the art of spiritual cultivation',
+    skills: [
+      { level: 1, name: 'Inner Breathing', bonus: '+5% Mana Regeneration' },
+      { level: 5, name: 'Spirit Absorption', bonus: '+10% All Attribute XP' },
+      { level: 10, name: 'Celestial Harmony', bonus: '+15% Mana & Intelligence Gain' },
+    ],
+  },
+  combat: {
+    name: 'Combat Mastery',
+    icon: 'fa-sword',
+    desc: 'Perfect your martial technique',
+    skills: [
+      { level: 1, name: 'Basic Strikes', bonus: '+5% Weapon Damage' },
+      { level: 5, name: 'Whirlwind Attack', bonus: '+2 Monster Encounters/Tick' },
+      { level: 10, name: 'Divine Sword Art', bonus: '+25% Combat Damage' },
+    ],
+  },
+  alchemy: {
+    name: 'Alchemical Arts',
+    icon: 'fa-flask',
+    desc: 'Refine powerful pills and elixirs',
+    skills: [
+      { level: 1, name: 'Herbalist Knowledge', bonus: '+5% Herb Gathering' },
+      { level: 5, name: 'Pill Refinement', bonus: '-1 Stone Cost (Recipes)' },
+      { level: 10, name: 'Immortal Elixirs', bonus: '+50% Pill Effects' },
+    ],
+  },
+  fortitude: {
+    name: 'Fortitude Training',
+    icon: 'fa-shield',
+    desc: 'Strengthen body and resolve',
+    skills: [
+      { level: 1, name: 'Iron Skin', bonus: '+5% Max Health' },
+      { level: 5, name: 'Unbreakable Will', bonus: '+10% Defense' },
+      { level: 10, name: 'Eternal Durability', bonus: '+20% Max HP & Defense' },
+    ],
+  },
+};
+
 const gameState = {
-  version: '1.5.0',
+  version: '1.6.0',
   realmIndex: 0,
   ageYears: 18,
   ageDays: 0,
@@ -31,6 +103,12 @@ const gameState = {
   sectContribution: 0,
   gameSpeed: 1,
   currentActivity: 'resting',
+  currentLocation: 'temple',
+  // ===== NEW: SKILL SYSTEM =====
+  skills: Object.keys(skillTreesData).reduce((acc, key) => {
+    acc[key] = { level: 1, xp: 0, maxXp: 100 };
+    return acc;
+  }, {}),
   stats: {
     totalTimePlayed: 0,
     monstersDefeated: 0,
@@ -230,7 +308,7 @@ function renderInventory() {
   container.innerHTML = Array.from({ length: 20 }, (_, index) => {
     const item = items[index];
     if (!item) return '<div class="bg-slate-950/80 border border-slate-800 rounded-md min-h-[36px]"></div>';
-    return `<div class="bg-slate-950/80 border border-slate-800 rounded-md min-h-[36px] p-1 flex flex-col items-center justify-center text-[9px] text-slate-200 hover:border-amber-500/60" title="${item.name} (${item.count})"><i class="fa-solid ${item.icon} text-amber-400"></i><span class="mt-1">${item.count}</span></div>`;
+    return `<div class="bg-slate-950/80 border border-slate-800 rounded-md min-h-[36px] p-1 flex flex-col items-center justify-center text-[9px] text-slate-200 hover:border-amber-500/60" title="${item.name}"><i class="fa-solid ${item.icon}"></i></div>`;
   }).join('');
   if (countEl) countEl.textContent = String(items.length);
 }
@@ -376,6 +454,39 @@ function updateHeader() {
   document.getElementById('bar-nutrition').style.width = `${(gameState.nutrition / gameState.maxNutrition) * 100}%`;
 }
 
+// ===== NEW: SKILL XP SYSTEM =====
+function applySkillBonuses(activityKey) {
+  let bonusMultiplier = 1.0;
+  const skillMapping = {
+    cultivation: ['meditation', 'sutra_study', 'stargazing'],
+    combat: ['martial_training'],
+    alchemy: ['herb_gathering'],
+    fortitude: ['resting'],
+  };
+
+  for (const [skill, activities] of Object.entries(skillMapping)) {
+    if (activities.includes(activityKey)) {
+      const skillBonus = gameState.skills[skill].level * 0.05;
+      bonusMultiplier += skillBonus;
+    }
+  }
+  return bonusMultiplier;
+}
+
+function gainSkillXP(skillKey, amount) {
+  const skill = gameState.skills[skillKey];
+  if (!skill) return;
+
+  skill.xp += amount;
+  if (skill.xp >= skill.maxXp) {
+    skill.xp = 0;
+    skill.level += 1;
+    skill.maxXp = Math.floor(skill.maxXp * 1.3);
+    addLog(`Your ${Object.keys(skillTreesData)[Object.keys(gameState.skills).indexOf(skillKey)]} skill has reached Level ${skill.level}!`, 'cultivation');
+    showToast(`Skill Level Up!`, 'success');
+  }
+}
+
 function gameTick() {
   gameState.stats.totalTimePlayed += gameState.gameSpeed;
   gameState.ageDays += 5 * gameState.gameSpeed;
@@ -400,18 +511,26 @@ function gameTick() {
   const activity = gameState.activities[gameState.currentActivity];
   if (activity && activity.unlocked) {
     const bonus = gameState.sect === 'Brahma Wisdom Sect' && (gameState.currentActivity === 'sutra_study' || gameState.currentActivity === 'stargazing') ? 1.25 : 1;
+    const skillBonus = applySkillBonuses(gameState.currentActivity);
+    const totalBonus = bonus * skillBonus;
+
     if (gameState.currentActivity === 'resting') {
       gameState.health = Math.min(gameState.maxHealth, gameState.health + (activity.healthGain || 2));
+      gainSkillXP('fortitude', 0.5 * totalBonus);
     } else if (gameState.currentActivity === 'odd_jobs') {
-      const gain = (activity.taelsGain || 5) * bonus;
+      const gain = (activity.taelsGain || 5) * totalBonus;
       gameState.taels += gain;
-      gainAttributeXP('strength', 0.5 * bonus);
+      gainAttributeXP('strength', 0.5 * totalBonus);
     } else if (gameState.currentActivity === 'meditation') {
       gameState.mana = Math.min(gameState.maxMana, gameState.mana + (activity.manaGain || 5));
-      gainAttributeXP('intelligence', (activity.intGain || 1) * bonus);
+      gainAttributeXP('intelligence', (activity.intGain || 1) * totalBonus);
+      gainSkillXP('cultivation', 1 * totalBonus);
     } else if (gameState.currentActivity === 'martial_training') {
-      gainAttributeXP('strength', (activity.strGain || 1) * bonus);
-      gainAttributeXP('speed', (activity.spdGain || 1) * bonus);
+      gainAttributeXP('strength', (activity.strGain || 1) * totalBonus);
+      gainAttributeXP('speed', (activity.spdGain || 1) * totalBonus);
+      gainSkillXP('combat', 1 * totalBonus);
+    } else if (gameState.currentActivity === 'herb_gathering') {
+      gainSkillXP('alchemy', 1 * totalBonus);
     }
   }
 
@@ -788,8 +907,9 @@ updateHeader();
 
 window.gameState = gameState;
 window.realms = realms;
+window.skillTreesData = skillTreesData;
+window.locations = locations;
 
 showToast('Adventure initialized.', 'system');
 
-console.log('Yuga Idle: Chronicles of the Trimurti initialized.');
-
+console.log('Yuga Idle: Chronicles of the Trimurti v1.6.0 - Enhanced with Skill Trees!');
