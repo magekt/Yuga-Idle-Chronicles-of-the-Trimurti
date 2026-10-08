@@ -89,10 +89,10 @@
           </button>
           <button onclick="openModal('store-modal')" class="px-2 py-1 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded-lg text-xs transition shadow" title="Pavilion"><i class="fa-solid fa-store"></i></button>
           <button onclick="openModal('alchemy-modal')" class="px-2 py-1 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded-lg text-xs transition shadow" title="Alchemy"><i class="fa-solid fa-flask"></i></button>
-          <button onclick="openModal('sect-modal')" class="px-2 py-1 bg-cyan-700 hover:bg-cyan-600 text-white font-bold rounded-lg text-xs transition shadow relative" title="Sect"><i class="fa-solid fa-mountain-city"></i><span id="sect-badge" class="notification-badge hidden"></span></button>
+          <button onclick="openModal('sect-modal')" class="px-2 py-1 bg-cyan-700 hover:bg-cyan-600 text-white font-bold rounded-lg text-xs transition shadow relative" title="Sect"><i class="fa-solid fa-mountain-city"></i></button>
           <button onclick="openModal('pets-modal')" class="px-2 py-1 bg-purple-700 hover:bg-purple-600 text-white font-bold rounded-lg text-xs transition shadow" title="Pets"><i class="fa-solid fa-paw"></i></button>
-          <button onclick="openModal('achievements-modal')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg text-xs transition border gold-border relative" title="Achievements"><i class="fa-solid fa-trophy"></i><span id="achievements-badge" class="notification-badge hidden"></span></button>
-          <button onclick="openModal('guide-modal')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg text-xs transition border gold-border" title="Guide"><i class="fa-solid fa-book"></i></button>
+          <button onclick="openModal('achievements-modal')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg text-xs transition border gold-border relative" title="Achievements"><i class="fa-solid fa-trophy"></i></button>
+          <button onclick="openModal('guide-modal')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg text-xs transition border gold-border" title="Guide"><i class="fa-solid fa-book-open"></i></button>
           <button onclick="openModal('settings-modal')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg text-xs transition border gold-border" title="Settings"><i class="fa-solid fa-gear"></i></button>
         </div>
       </div>
@@ -157,7 +157,7 @@
               <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-amber-900/40">
                 <div id="bar-stamina" class="bg-gradient-to-r from-amber-600 to-amber-400 h-full transition-all duration-100"></div>
               </div>
-              <div class="text-[9px] text-amber-400/70 mt-0.5" id="stamina-rate">-0.5/s</div>
+              <div class="text-[9px] text-amber-400/70 mt-0.5" id="stamina-rate">+8.0/s</div>
             </div>
             <div>
               <div class="flex justify-between text-[11px] mb-0.5">
@@ -177,7 +177,7 @@
               <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-emerald-900/40">
                 <div id="bar-nutrition" class="bg-gradient-to-r from-emerald-600 to-emerald-400 h-full transition-all duration-100"></div>
               </div>
-              <div class="text-[9px] text-emerald-400/70 mt-0.5" id="nutrition-rate">-0.3/s</div>
+              <div class="text-[9px] text-emerald-400/70 mt-0.5" id="nutrition-rate">-1.0/s</div>
             </div>
           </div>
         </div>
@@ -251,7 +251,7 @@
             <button onclick="sortInventory()" class="p-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded text-xs border gold-border" title="Sort Inventory"><i class="fa-solid fa-arrow-down-a-z"></i></button>
           </div>
           <div class="grid grid-cols-5 gap-1.5 bg-slate-900/80 p-2 rounded-lg border border-slate-800 min-h-[100px]" id="inventory-grid"></div>
-          <div id="item-tooltip" class="mt-2 p-2 bg-slate-900 rounded border border-slate-800 text-[11px] text-slate-300 min-h-[35px]"><span class="text-slate-500 italic">Hover or click an item to see details</span></div>
+          <div id="item-tooltip" class="mt-2 p-2 bg-slate-900 rounded border border-slate-800 text-[11px] text-slate-300 min-h-[35px]"><span class="text-slate-500 italic">Hover or click an item to see details.</span></div>
         </div>
 
         <div id="pane-log" class="panel-bg border gold-border rounded-xl p-3 shadow-lg flex-1 flex flex-col">
@@ -317,7 +317,7 @@
         <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 text-xs text-slate-300 mb-4 space-y-1.5 text-left">
           <div class="flex justify-between"><span>Current Realm:</span> <span id="bt-current" class="font-bold text-amber-400">Mortal Body</span></div>
           <div class="flex justify-between"><span>Next Realm:</span> <span id="bt-next" class="font-bold text-cyan-300">Qi Condensation</span></div>
-          <div class="flex justify-between"><span>Success Probability:</span> <span id="bt-chance" class="font-bold text-emerald-400">85%</span></div>
+          <div class="flex justify-between"><span>Success Probability:</span> <span id="bt-chance" class="font-bold text-emerald-400">5.0%</span></div>
           <div class="flex justify-between"><span>Required St. Stones:</span> <span class="font-bold text-amber-300">10</span></div>
         </div>
         <button onclick="attemptBreakthrough()" class="w-full py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-bold rounded-lg shadow transition">Attempt Breakthrough</button>
@@ -383,7 +383,7 @@
           <p>• All Attribute Aptitudes permanently increased by <span class="text-amber-300 font-bold">+0.5</span></p>
           <p>• Progression advances towards higher Yuga cycles.</p>
         </div>
-        <button onclick="executeReincarnation()" class="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-bold rounded-lg shadow transition">Begin New Cycle</button>
+        <button onclick="executeReincarnation()" class="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-bold rounded-lg shadow transition">Begin Anew</button>
       </div>
     </div>
 
@@ -406,9 +406,9 @@
         <button onclick="closeModal('settings-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
         <h2 class="font-cinzel font-bold text-base text-amber-400 mb-4 flex items-center space-x-2"><i class="fa-solid fa-gear text-amber-500"></i><span>Game Settings</span></h2>
         <div class="space-y-4 text-xs text-slate-300">
-          <div class="flex justify-between items-center"><span>Export Save Data</span><button onclick="exportSave()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded border gold-border">Export</button></div>
-          <div class="flex justify-between items-center"><span>Import Save Data</span><button onclick="importSave()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded border gold-border">Import</button></div>
-          <div class="flex justify-between items-center pt-3 border-t border-slate-800"><span class="text-red-400">Hard Reset Progress</span><button onclick="hardReset()" class="px-3 py-1.5 bg-red-900 hover:bg-red-800 text-red-200 rounded">Reset</button></div>
+          <div class="flex justify-between items-center"><span>Export Save Data</span><button onclick="exportSave()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded border gold-border font-bold">Export</button></div>
+          <div class="flex justify-between items-center"><span>Import Save Data</span><button onclick="importSave()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded border gold-border font-bold">Import</button></div>
+          <div class="flex justify-between items-center pt-3 border-t border-slate-800"><span class="text-red-400">Hard Reset Progress</span><button onclick="hardReset()" class="px-3 py-1.5 bg-red-800 hover:bg-red-700 text-white rounded font-bold">Reset</button></div>
         </div>
       </div>
     </div>
