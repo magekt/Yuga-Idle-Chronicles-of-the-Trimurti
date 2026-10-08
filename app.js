@@ -9,7 +9,7 @@ const realms = [
 ];
 
 const gameState = {
-  version: '1.6.0',
+  version: '1.6.1',
   realmIndex: 0,
   ageYears: 18,
   ageDays: 0,
@@ -61,7 +61,7 @@ const gameState = {
     { id: 'ascend', name: 'Qi Condensation', desc: 'Successfully breakthrough to Qi Condensation realm.', reward: '50 Stones & +5 Years Life', completed: false },
   ],
   activities: {
-    resting: { name: 'Resting', desc: 'Rest at home to recover Health and Stamina.', icon: 'fa-bed', staminaCost: -5, healthGain: 2, unlocked: true },
+    resting: { name: 'Resting', desc: 'Rest at home to recover Health and Stamina.', icon: 'fa-bed', staminaCost: 0, healthGain: 2, staminaGain: 8, unlocked: true },
     odd_jobs: { name: 'Odd Jobs', desc: 'Perform manual labor in the village for Taels.', icon: 'fa-briefcase', staminaCost: 8, taelsGain: 5, unlocked: true },
     meditation: { name: 'Meditation', desc: 'Meditate under the banyan tree to gain Mana and Intelligence.', icon: 'fa-spa', staminaCost: 4, manaGain: 5, intGain: 1, unlocked: true },
     martial_training: { name: 'Martial Training', desc: 'Practice ancient combat forms to build Strength and Speed.', icon: 'fa-hand-fist', staminaCost: 12, strGain: 1, spdGain: 1, unlocked: true },
@@ -80,6 +80,7 @@ const gameState = {
   combat: { active: false, isBoss: false, monsterName: '', hp: 50, maxHp: 50, attack: 5, defense: 2 },
   logFilter: 'all',
   log: [{ text: 'Your journey to immortality begins as a humble youth leaves home to experience the world.', type: 'cultivation', time: '18y 0d' }],
+  missionCooldowns: {},
 };
 
 const storeItems = [
@@ -107,20 +108,26 @@ const sectMissionsList = [
   { id: 'meditate', name: 'Guard the Spirit Spring', rewardStones: 5, rewardContr: 25, desc: 'Meditate by the pure spring to absorb divine Qi.' },
 ];
 
+let gameLoopId = null;
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function getStartingInventory() {
+  return [
+    { id: 1, name: 'Rice Sack', type: 'food', desc: 'A modest sack of nourishing white rice.', count: 3, icon: 'fa-bowl-rice', rarity: 'common' },
+    { id: 2, name: 'Iron Sword', type: 'weapon', desc: 'A sturdy iron blade (+5 Attack).', count: 1, icon: 'fa-sword', slot: 'weapon', atk: 5, rarity: 'rare' },
+    { id: 3, name: 'Ginseng Herb', type: 'herb', desc: 'Spiritual herb used in pill alchemy.', count: 2, icon: 'fa-leaf', rarity: 'common' },
+  ];
+}
+
 function init() {
-  renderAttributes();
-  renderActivities();
-  renderInventory();
-  renderEquipment();
-  renderStore();
-  renderAlchemy();
-  renderAchievements();
-  renderPets();
-  renderSect();
-  renderLog();
+  if (gameLoopId) return;
+  renderAll();
   updateHeader();
   updateNotifications();
-  setInterval(gameTick, 1000);
+  gameLoopId = setInterval(gameTick, 1000);
 }
 
 document.addEventListener('DOMContentLoaded', init);
@@ -155,28 +162,33 @@ function setVitalRates() {
     if (activity.healthGain) rates.health = activity.healthGain * speed;
     if (activity.taelsGain) rates.taels = activity.taelsGain * speed;
     if (activity.manaGain) rates.mana = activity.manaGain * speed;
-    if (activity.staminaCost) rates.stamina = activity.staminaCost * speed;
+    if (activity.staminaCost) rates.stamina = -Math.abs(activity.staminaCost * speed);
+    if (activity.staminaGain) rates.stamina = activity.staminaGain * speed;
   }
 
+  if (gameState.currentActivity === 'resting') {
+    rates.health = (gameState.activities.resting.healthGain || 2) * speed;
+    rates.stamina = (gameState.activities.resting.staminaGain || 8) * speed;
+  }
   if (gameState.currentActivity === 'herb_gathering') rates.stones = 0.5 * speed;
   if (gameState.currentActivity === 'odd_jobs') rates.taels = (gameState.activities.odd_jobs.taelsGain || 5) * speed;
   if (gameState.currentActivity === 'meditation') rates.mana = (gameState.activities.meditation.manaGain || 5) * speed;
-  if (gameState.currentActivity === 'resting') rates.health = (gameState.activities.resting.healthGain || 2) * speed;
-  if (gameState.currentActivity === 'martial_training') rates.stamina = (gameState.activities.martial_training.staminaCost || 12) * speed;
+  if (gameState.currentActivity === 'martial_training') rates.stamina = -Math.abs((gameState.activities.martial_training.staminaCost || 12) * speed);
+  if (gameState.currentActivity === 'sutra_study') rates.intelligence = 0;
 
   gameState.rates = rates;
 }
 
 function switchTab(tabName) {
   const navTabs = ['nav-cultivation', 'nav-combat', 'nav-commerce', 'nav-inventory', 'nav-chronicle'];
-  navTabs.forEach(id => {
+  navTabs.forEach((id) => {
     const el = document.getElementById(id);
     if (!el) return;
     el.classList.toggle('active-tab', id === `nav-${tabName}`);
   });
 
   const sections = ['pane-cultivation', 'pane-activities', 'pane-combat', 'pane-inventory', 'pane-log'];
-  sections.forEach(id => {
+  sections.forEach((id) => {
     const el = document.getElementById(id);
     if (!el) return;
     const shouldShow =
@@ -293,7 +305,7 @@ function renderInventory() {
     const item = items[index];
     if (!item) return '<div class="bg-slate-950/80 border border-slate-800 rounded-md min-h-[36px]"></div>';
     const rarityClass = `rarity-${item.rarity || 'common'}`;
-    return `<div class="bg-slate-950/80 border rounded-md min-h-[36px] p-1 flex flex-col items-center justify-center text-[9px] text-slate-200 hover:border-amber-500/60 ${rarityClass}" title="${item.name}\n${item.desc}"><i class="fa-solid ${item.icon}"></i></div>`;
+    return `<div class="bg-slate-950/80 border rounded-md min-h-[36px] p-1 flex flex-col items-center justify-center text-[9px] text-slate-200 hover:border-amber-500/60 ${rarityClass}" title="${item.name} (${item.count})"><i class="fa-solid ${item.icon} text-amber-300"></i><span>${item.count > 1 ? item.count : ''}</span></div>`;
   }).join('');
   if (countEl) countEl.textContent = String(items.length);
 }
@@ -422,7 +434,7 @@ function addLog(text, type = 'cultivation') {
 
 function updateHeader() {
   setVitalRates();
-  const realm = realms[gameState.realmIndex];
+  const realm = realms[gameState.realmIndex] || realms[realms.length - 1];
   const healthPct = (gameState.health / gameState.maxHealth) * 100;
   const staminaPct = (gameState.stamina / gameState.maxStamina) * 100;
   const manaPct = (gameState.mana / gameState.maxMana) * 100;
@@ -482,45 +494,120 @@ function updateHeader() {
   if (mobileStaminaVal) mobileStaminaVal.textContent = `${Math.round(gameState.stamina)}/${gameState.maxStamina}`;
   if (mobileManaVal) mobileManaVal.textContent = `${Math.round(gameState.mana)}/${gameState.maxMana}`;
   if (mobileNutritionVal) mobileNutritionVal.textContent = `${Math.round(gameState.nutrition)}/${gameState.maxNutrition}`;
+
+  updateBreakthroughInfo();
+}
+
+function updateBreakthroughInfo() {
+  const nextRealm = realms[gameState.realmIndex + 1];
+  if (!nextRealm) {
+    const desc = document.getElementById('breakthrough-desc');
+    const chance = document.getElementById('bt-chance');
+    const next = document.getElementById('bt-next');
+    if (desc) desc.textContent = 'You have reached the peak of this world and stand at the threshold of the next age.';
+    if (chance) chance.textContent = 'N/A';
+    if (next) next.textContent = 'Maximum realm';
+    return;
+  }
+
+  const avgAttr = (gameState.attributes.strength.value + gameState.attributes.intelligence.value + gameState.attributes.toughness.value) / 3;
+  const chance = Math.min(0.95, Math.max(0.05, (avgAttr / nextRealm.reqAttr) * 0.8));
+  const btCurrent = document.getElementById('bt-current');
+  const btNext = document.getElementById('bt-next');
+  const btChance = document.getElementById('bt-chance');
+  if (btCurrent) btCurrent.textContent = realms[gameState.realmIndex].name;
+  if (btNext) btNext.textContent = nextRealm.name;
+  if (btChance) btChance.textContent = `${(chance * 100).toFixed(1)}%`;
+}
+
+function processActivityTick() {
+  const activity = gameState.activities[gameState.currentActivity];
+  if (!activity || !activity.unlocked) return;
+
+  const cost = activity.staminaCost || 0;
+  const speedFactor = gameState.gameSpeed || 1;
+  const hasStamina = gameState.stamina >= cost * speedFactor;
+
+  if (gameState.currentActivity === 'resting') {
+    gameState.stamina = clamp(gameState.stamina + (activity.staminaGain || 8) * speedFactor, 0, gameState.maxStamina);
+    gameState.health = clamp(gameState.health + (activity.healthGain || 2) * speedFactor, 0, gameState.maxHealth);
+    return;
+  }
+
+  if (!hasStamina) {
+    gameState.health = clamp(gameState.health - 2 * speedFactor, 0, gameState.maxHealth);
+    addLog('Your body falters; you do not have enough stamina to continue this sadhana.', 'system');
+    return;
+  }
+
+  gameState.stamina = clamp(gameState.stamina - cost * speedFactor, 0, gameState.maxStamina);
+
+  const bonus = gameState.sect === 'Brahma Wisdom Sect' && (gameState.currentActivity === 'sutra_study' || gameState.currentActivity === 'stargazing') ? 1.25 : 1;
+  const petBonus = gameState.activePet === 'fox' && (gameState.currentActivity === 'meditation' || gameState.currentActivity === 'sutra_study') ? 1.1 : 1;
+
+  if (gameState.currentActivity === 'odd_jobs') {
+    const gain = (activity.taelsGain || 5) * bonus;
+    gameState.taels += gain;
+    gainAttributeXP('strength', 0.5 * bonus);
+  } else if (gameState.currentActivity === 'meditation') {
+    gameState.mana = clamp(gameState.mana + (activity.manaGain || 5) * petBonus, 0, gameState.maxMana);
+    gainAttributeXP('intelligence', (activity.intGain || 1) * bonus * petBonus);
+  } else if (gameState.currentActivity === 'martial_training') {
+    gainAttributeXP('strength', (activity.strGain || 1) * bonus);
+    gainAttributeXP('speed', (activity.spdGain || 1) * bonus);
+  } else if (gameState.currentActivity === 'herb_gathering') {
+    addInventoryItem('Ginseng Herb', 1, 'herb', 'Freshly gathered spiritual herb.', null, 0, 0);
+    gameState.spiritualStones += 0.5;
+  } else if (gameState.currentActivity === 'sutra_study') {
+    gameState.mana = clamp(gameState.mana + 2 * bonus, 0, gameState.maxMana);
+    gainAttributeXP('intelligence', (activity.intGain || 2) * bonus * petBonus);
+  } else if (gameState.currentActivity === 'ritual_offerings') {
+    gameState.mana = clamp(gameState.mana + (activity.manaGain || 2), 0, gameState.maxMana);
+    gainAttributeXP('charisma', (activity.chaGain || 2) * bonus);
+  } else if (gameState.currentActivity === 'stargazing') {
+    gameState.mana = clamp(gameState.mana + (activity.manaGain || 8), 0, gameState.maxMana);
+    gainAttributeXP('intelligence', (activity.intGain || 4) * bonus * petBonus);
+  } else if (gameState.currentActivity === 'kundalini') {
+    gameState.mana = clamp(gameState.mana + (activity.manaGain || 12), 0, gameState.maxMana);
+    gainAttributeXP('toughness', (activity.toughGain || 3) * bonus);
+  } else if (gameState.currentActivity === 'mantra_chanting') {
+    gainAttributeXP('charisma', (activity.chaGain || 4) * bonus);
+  }
 }
 
 function gameTick() {
-  gameState.stats.totalTimePlayed += gameState.gameSpeed;
-  gameState.ageDays += 5 * gameState.gameSpeed;
+  const speed = gameState.gameSpeed || 1;
+  gameState.stats.totalTimePlayed += speed;
+  gameState.ageDays += 5 * speed;
+
   if (gameState.ageDays >= 365) {
     gameState.ageYears += Math.floor(gameState.ageDays / 365);
     gameState.ageDays = gameState.ageDays % 365;
     addLog(`You have grown older. You are now ${gameState.ageYears} years old.`, 'aging');
   }
 
-  gameState.nutrition = Math.max(0, gameState.nutrition - 1 * gameState.gameSpeed);
+  if (gameState.ageYears >= gameState.maxAge) {
+    triggerReincarnation('Your lifespan has ended. The cycle of samsara continues.');
+    return;
+  }
+
+  gameState.nutrition = Math.max(0, gameState.nutrition - 1 * speed);
   if (gameState.nutrition <= 20) {
     if (gameState.taels >= 1) {
       gameState.taels -= 1;
       gameState.nutrition = Math.min(100, gameState.nutrition + 25);
       addLog('Out of food provisions, you spent 1 Tael on a bowl of rice.', 'cultivation');
     } else {
-      gameState.health = Math.max(0, gameState.health - 5);
+      gameState.health = clamp(gameState.health - 5 * speed, 0, gameState.maxHealth);
       addLog('Starvation is damaging your health!', 'system');
     }
   }
 
-  const activity = gameState.activities[gameState.currentActivity];
-  if (activity && activity.unlocked) {
-    const bonus = gameState.sect === 'Brahma Wisdom Sect' && (gameState.currentActivity === 'sutra_study' || gameState.currentActivity === 'stargazing') ? 1.25 : 1;
-    if (gameState.currentActivity === 'resting') {
-      gameState.health = Math.min(gameState.maxHealth, gameState.health + (activity.healthGain || 2));
-    } else if (gameState.currentActivity === 'odd_jobs') {
-      const gain = (activity.taelsGain || 5) * bonus;
-      gameState.taels += gain;
-      gainAttributeXP('strength', 0.5 * bonus);
-    } else if (gameState.currentActivity === 'meditation') {
-      gameState.mana = Math.min(gameState.maxMana, gameState.mana + (activity.manaGain || 5));
-      gainAttributeXP('intelligence', (activity.intGain || 1) * bonus);
-    } else if (gameState.currentActivity === 'martial_training') {
-      gainAttributeXP('strength', (activity.strGain || 1) * bonus);
-      gainAttributeXP('speed', (activity.spdGain || 1) * bonus);
-    }
+  processActivityTick();
+
+  if (gameState.health <= 0) {
+    triggerReincarnation('Your body has collapsed under the burden of the world.');
+    return;
   }
 
   if (gameState.combat.active) {
@@ -616,9 +703,11 @@ function attemptBreakthrough() {
     showToast('Need at least 10 Spiritual Stones to attempt breakthrough!', 'error');
     return;
   }
+
   const avgAttr = (gameState.attributes.strength.value + gameState.attributes.intelligence.value + gameState.attributes.toughness.value) / 3;
-  const chance = Math.min(0.95, (avgAttr / nextRealm.reqAttr) * 0.8);
+  const chance = Math.min(0.95, Math.max(0.05, (avgAttr / nextRealm.reqAttr) * 0.8));
   gameState.spiritualStones -= 10;
+
   if (Math.random() <= chance) {
     gameState.realmIndex += 1;
     gameState.maxAge = nextRealm.lifeExp;
@@ -665,11 +754,13 @@ function buyStoreItem(itemId) {
     showToast('Not enough taels.', 'error');
     return;
   }
+
   gameState.taels -= item.cost;
   if (item.id === 'sack_rice') addInventoryItem('Rice Sack', 5, 'food', 'Freshly purchased rice.');
-  if (item.id === 'sword_steel') addInventoryItem('Master Steel Sword', 1, 'weapon', 'Celestial steel weapon.', 'weapon', 12);
-  if (item.id === 'jade_armor') addInventoryItem('Dragon Jade Robe', 1, 'armor', 'Protective immortal robe.', 'armor', 8);
+  if (item.id === 'sword_steel') addInventoryItem('Master Steel Sword', 1, 'weapon', 'Celestial steel weapon.', 'weapon', 12, 0);
+  if (item.id === 'jade_armor') addInventoryItem('Dragon Jade Robe', 1, 'armor', 'Protective immortal robe.', 'armor', 0, 8);
   if (item.id === 'pill_longevity') gameState.maxAge += 10;
+
   addLog(`You bought ${item.name}.`, 'cultivation');
   updateHeader();
   renderInventory();
@@ -702,20 +793,42 @@ function addInventoryItem(name, count, type, desc, slot = null, atk = 0, def = 0
   const existing = gameState.inventory.find((item) => item.name === name && item.type === type);
   if (existing) {
     existing.count += count;
-  } else {
-    gameState.inventory.push({ id: Date.now(), name, type, desc, count, icon: type === 'weapon' ? 'fa-sword' : type === 'armor' ? 'fa-shield-halved' : 'fa-leaf', slot, atk, def, rarity: type === 'weapon' ? 'rare' : type === 'armor' ? 'epic' : 'common' });
+    return existing;
   }
+
+  const resolvedSlot = slot && ['weapon', 'armor', 'talisman', 'mount'].includes(slot) ? slot : type === 'weapon' ? 'weapon' : type === 'armor' ? 'armor' : null;
+  const item = {
+    id: Date.now() + Math.random(),
+    name,
+    type,
+    desc,
+    count,
+    icon: type === 'weapon' ? 'fa-sword' : type === 'armor' ? 'fa-shield-halved' : type === 'food' ? 'fa-bowl-rice' : 'fa-leaf',
+    slot: resolvedSlot,
+    atk: resolvedSlot === 'weapon' ? atk : 0,
+    def: resolvedSlot === 'armor' ? def : 0,
+    rarity: type === 'weapon' ? 'rare' : type === 'armor' ? 'epic' : 'common',
+  };
+  gameState.inventory.push(item);
   renderInventory();
+  return item;
 }
 
 function joinSect(sectId) {
   const sect = sectList.find((entry) => entry.id === sectId);
   if (!sect) return;
+  if (sectId !== 'none' && gameState.spiritualStones < 5) {
+    showToast('You need 5 Spiritual Stones to join a sect.', 'error');
+    return;
+  }
+  if (sectId !== 'none') {
+    gameState.spiritualStones -= 5;
+  }
   gameState.sect = sect.name;
-  if (sectId === 'none') gameState.sectRank = 'Independent';
-  else gameState.sectRank = 'Outer Disciple';
+  gameState.sectRank = sectId === 'none' ? 'Independent' : 'Outer Disciple';
   addLog(`You aligned with the ${sect.name}.`, 'cultivation');
   updateNotifications();
+  updateHeader();
 }
 
 function acceptMission(missionId) {
@@ -725,8 +838,18 @@ function acceptMission(missionId) {
     showToast('You need to join a sect before taking missions.', 'error');
     return;
   }
-  gameState.spiritualStones += mission.rewardStones;
+
+  const now = Date.now();
+  const cooldownMs = 30000;
+  if (gameState.missionCooldowns[missionId] && (now - gameState.missionCooldowns[missionId]) < cooldownMs) {
+    showToast('This mission is cooling down.', 'error');
+    return;
+  }
+
+  const cappedReward = { patrol: 2, gather: 2, meditate: 3 }[missionId] || 2;
+  gameState.spiritualStones += cappedReward;
   gameState.sectContribution += mission.rewardContr;
+  gameState.missionCooldowns[missionId] = now;
   addLog(`Mission complete: ${mission.name}.`, 'combat');
   updateHeader();
 }
@@ -764,13 +887,20 @@ function startCombat(isBoss) {
   const defense = isBoss ? 8 : 2;
 
   gameState.combat = { active: true, isBoss, monsterName: name, hp, maxHp: hp, attack, defense };
-  document.getElementById('monster-tier-badge').textContent = isBoss ? 'BOSS RAID' : 'Standard Encounter';
-  document.getElementById('monster-name').textContent = name;
-  document.getElementById('monster-hp-val').textContent = `${hp} / ${hp}`;
-  document.getElementById('monster-bar-hp').style.width = '100%';
-  document.getElementById('combat-panel').classList.remove('hidden');
-  document.getElementById('combat-idle-msg').classList.add('hidden');
-  document.getElementById('combat-toggle-btn').textContent = 'Flee Combat';
+  const badge = document.getElementById('monster-tier-badge');
+  const monsterName = document.getElementById('monster-name');
+  const hpVal = document.getElementById('monster-hp-val');
+  const bar = document.getElementById('monster-bar-hp');
+  const panel = document.getElementById('combat-panel');
+  const idle = document.getElementById('combat-idle-msg');
+  const button = document.getElementById('combat-toggle-btn');
+  if (badge) badge.textContent = isBoss ? 'BOSS RAID' : 'Standard Encounter';
+  if (monsterName) monsterName.textContent = name;
+  if (hpVal) hpVal.textContent = `${hp} / ${hp}`;
+  if (bar) bar.style.width = '100%';
+  if (panel) panel.classList.remove('hidden');
+  if (idle) idle.classList.add('hidden');
+  if (button) button.textContent = 'Flee Combat';
   addLog(`Encountered ${isBoss ? 'BOSS' : 'wild'} ${name}! Combat has begun.`, 'combat');
 }
 
@@ -794,11 +924,17 @@ function triggerSpecialAttack() {
 
 function fleeCombat() {
   gameState.combat.active = false;
-  document.getElementById('combat-panel').classList.add('hidden');
-  document.getElementById('combat-idle-msg').classList.remove('hidden');
-  document.getElementById('combat-toggle-btn').textContent = 'Look for Trouble';
-  document.getElementById('combat-toggle-btn').className = 'px-2.5 py-1 bg-red-700 hover:bg-red-600 text-white font-bold text-xs rounded transition shadow action-ready';
-  document.getElementById('combat-sublog').innerHTML = '<div>Engaging in battle...</div>';
+  const panel = document.getElementById('combat-panel');
+  const idle = document.getElementById('combat-idle-msg');
+  const button = document.getElementById('combat-toggle-btn');
+  const sublog = document.getElementById('combat-sublog');
+  if (panel) panel.classList.add('hidden');
+  if (idle) idle.classList.remove('hidden');
+  if (button) {
+    button.textContent = 'Look for Trouble';
+    button.className = 'px-2.5 py-1 bg-red-700 hover:bg-red-600 text-white font-bold text-xs rounded transition shadow action-ready';
+  }
+  if (sublog) sublog.innerHTML = '<div>Engaging in battle...</div>';
 }
 
 function sortInventory() {
@@ -829,11 +965,52 @@ function hardReset() {
   window.location.reload();
 }
 
+function triggerReincarnation(reason) {
+  const modal = document.getElementById('reincarnation-modal');
+  const reasonEl = document.getElementById('reincarnation-reason');
+  if (reasonEl) reasonEl.textContent = reason;
+  if (modal) modal.classList.remove('hidden');
+}
+
+function resetLifeState() {
+  gameState.realmIndex = 0;
+  gameState.ageYears = 18;
+  gameState.ageDays = 0;
+  gameState.maxAge = 30;
+  gameState.health = 100;
+  gameState.maxHealth = 100;
+  gameState.stamina = 100;
+  gameState.maxStamina = 100;
+  gameState.mana = 100;
+  gameState.maxMana = 100;
+  gameState.nutrition = 100;
+  gameState.maxNutrition = 100;
+  gameState.taels = 300;
+  gameState.spiritualStones = 5;
+  gameState.sect = 'None';
+  gameState.sectRank = 'Outer Disciple';
+  gameState.sectContribution = 0;
+  gameState.currentActivity = 'resting';
+  gameState.combat = { active: false, isBoss: false, monsterName: '', hp: 50, maxHp: 50, attack: 5, defense: 2 };
+  gameState.inventory = getStartingInventory();
+  gameState.equipment = { weapon: null, armor: null, talisman: null, mount: null };
+  gameState.activePet = null;
+  gameState.missionCooldowns = {};
+  gameState.log = [{ text: 'A new life begins beneath the same moon, with greater insight and renewed purpose.', type: 'cultivation', time: '18y 0d' }];
+  renderAll();
+  updateHeader();
+}
+
 function executeReincarnation() {
   gameState.reincarnations += 1;
   Object.values(gameState.attributes).forEach((attr) => {
-    attr.aptitude += 0.5;
+    attr.aptitude = Number((attr.aptitude + 0.5).toFixed(2));
+    attr.xp = 0;
+    attr.value = 1;
+    attr.maxXp = 100;
   });
+
+  resetLifeState();
   addLog('You begin a new life with elevated aptitude and renewed purpose.', 'cultivation');
   closeModal('reincarnation-modal');
   updateHeader();
@@ -855,7 +1032,7 @@ function renderAll() {
 }
 
 window.onload = () => {
-  init();
+  if (!gameLoopId) init();
 };
 
 setGameSpeed(1);
